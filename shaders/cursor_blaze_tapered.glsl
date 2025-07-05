@@ -95,7 +95,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
     // Set every vertex of my parellogram
     vec2 v0 = vec2(currentCursor.x + currentCursor.z * vertexFactor, currentCursor.y - currentCursor.w);
-    vec2 v1 = vec2(currentCursor.x + currentCursor.z * xMenorFactor, currentCursor.y - currentCursor.w * yMenorFactor);
+    vec2 v1 = vec2(currentCursor.x + currentCursor.z * xFactor, currentCursor.y - currentCursor.w * yFactor);
     vec2 v2 = vec2(currentCursor.x + currentCursor.z * invertedVertexFactor, currentCursor.y);
     vec2 v3 = centerCP;
 
