@@ -57,13 +57,13 @@ let previousCursor = { x: 0, y: 0, z: 10, w: 20 };
 let currentCursor = { x: 0, y: 0, z: 10, w: 20 };
 let option = 0;
 Promise.all([
-  fetch("/shaders/ghostty_wrapper.glsl").then((response) => response.text()),
+  fetch("ghostty_wrapper.glsl").then((response) => response.text()),
   Promise.all([
     // fetch("/shaders/debug_cursor_animated.glsl").then((response) =>
     //   response.text(),
     // ),
     fetch("/shaders/cursor_blaze.glsl").then((response) => response.text()),
-    fetch("/shaders/cursor_smear.glsl").then((response) => response.text()),
+    fetch("/shaders/WIP.glsl").then((response) => response.text()),
   ]),
 ]).then(([ghosttyWrapper, shaders]) => {
   const wrapShader = (shader) => ghosttyWrapper.replace("//$REPLACE$", shader);
@@ -212,3 +212,4 @@ function changePresetPosition(increment) {
   }
   setCursorUniforms();
 }
+changeMode("auto");
