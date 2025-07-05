@@ -1,23 +1,52 @@
-# My Playground for Developing Shaders for Ghostty Terminal
+# Shader Playground
 
-This is a dedicated space where you can experiment with and develop your shaders for the Ghostty terminal. Use the following command to start a local server with file watching enabled:
+A web-based playground for creating and testing cursor shaders for the Ghostty terminal.
 
 ## Getting Started
 
-1. Make sure you have [BrowserSync](https://browsersync.io/docs/installation) installed globally via npm:
+### Prerequisites
+- Node.js (for running the development server)
+
+### Installation
+1. Clone or download this repository.
+2. Install dependencies:
    ```bash
-   npm install -g browser-sync
+   npm install
    ```
 
-2. Navigate to your project directory:
+### Running
+1. Start the development server and open your browser automatically:
    ```bash
-   cd /path/to/your/project
+   npm start
    ```
-
-3. Run the command to start the development server:
+   
+   Or manually:
    ```bash
-   browser-sync start --server --files "./*" "shaders/*"
+   node server.js
    ```
+   Then open `http://localhost:3000` in your browser.
 
-4. Open your browser and go to `http://localhost:3000` to see your shaders in action.
+The server provides:
+- Static file serving for HTML, JS, and GLSL files
+- `/shaders-list` endpoint that returns available shader files
+- WebSocket server for live reload functionality
+- File watching that automatically reloads the page when shaders or other files change
 
+## Usage
+
+- Use the toolbar at the bottom to:
+  - Change cursor type (block, vertical bar, horizontal bar)
+  - Switch between AUTO, RND, and CLICK cursor movement modes
+  - Pick a cursor color (maped to uniform iCurrentCursorColor)
+- Click on a canvas (in CLICK mode) to move the cursor.
+- Use the dropdown on each canvas to switch shaders.
+- Use keyboard arrows, Enter, and Backspace to move the cursor.
+
+## Developing Shaders
+
+- Add your own shaders to the `shaders/` directory - they will automatically appear in the dropdown menus.
+- The server automatically watches for file changes and reloads the page when you modify shaders or other files.
+
+## License
+
+MIT License. See LICENSE file for details.
