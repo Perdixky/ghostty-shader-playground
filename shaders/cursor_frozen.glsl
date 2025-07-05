@@ -53,6 +53,15 @@ float determineStartVertexFactor(vec2 c, vec2 p) {
     return 1.0 - max(condition1, condition2);
 }
 
+float determineStartVertexFactor2(vec2 c, vec2 p) {
+    // Conditions using step
+    float condition1 = step(p.x, c.x) * step(c.y, p.y); // c.x < p.x && c.y > p.y
+    float condition2 = step(c.x, p.x) * step(p.y, c.y); // c.x > p.x && c.y < p.y
+
+    // If neither condition is met, return 1 (else case)
+    return 1.0 - max(condition1, condition2);
+}
+
 vec2 getRectangleCenter(vec4 rectangle) {
     return vec2(rectangle.x + (rectangle.z / 2.), rectangle.y - (rectangle.w / 2.));
 }
@@ -60,8 +69,8 @@ float ease(float x) {
     return pow(1.0 - x, 3.0);
 }
 
-const vec4 TRAIL_COLOR = vec4(1.0, 0.725, 0.161, 1.0);
-const vec4 TRAIL_COLOR_ACCENT = vec4(1.0, 0., 0., 1.0);
+const vec4 TRAIL_COLOR = vec4(.502, 0.98, 1., 1.0);
+const vec4 TRAIL_COLOR_ACCENT = vec4(.0, 0., 1., 1.0);
 const float DURATION = 0.3; //IN SECONDS
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
@@ -98,6 +107,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     float easedProgress = ease(progress);
     // Distance between cursors determine the total length of the parallelogram;
     float lineLength = distance(centerCC, centerCP);
+
+    vec4 newColor = vec4(fragColor);
+    // Compute fade factor based on distance along the trail
+    float fadeFactor = 1.0 - smoothstep(lineLength, sdfCurrentCursor, easedProgress * lineLength);
 
     float mod = .007;
     //trailblaze

@@ -53,6 +53,11 @@ float determineStartVertexFactor(vec2 c, vec2 p) {
     return 1.0 - max(condition1, condition2);
 }
 
+float isLess(float c, float p) {
+    // Conditions using step
+    return 1.0 - step(p, c); // c < p
+}
+
 vec2 getRectangleCenter(vec4 rectangle) {
     return vec2(rectangle.x + (rectangle.z / 2.), rectangle.y - (rectangle.w / 2.));
 }
@@ -85,11 +90,14 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     float vertexFactor = determineStartVertexFactor(currentCursor.xy, previousCursor.xy);
     float invertedVertexFactor = 1.0 - vertexFactor;
 
+    float xFactor = isLess(previousCursor.x, currentCursor.x);
+    float yFactor = isLess(currentCursor.y, previousCursor.y);
+
     // Set every vertex of my parellogram
     vec2 v0 = vec2(currentCursor.x + currentCursor.z * vertexFactor, currentCursor.y - currentCursor.w);
-    vec2 v1 = vec2(currentCursor.x + currentCursor.z * invertedVertexFactor, currentCursor.y);
-    vec2 v2 = vec2(previousCursor.x + currentCursor.z * invertedVertexFactor, previousCursor.y);
-    vec2 v3 = vec2(previousCursor.x + currentCursor.z * vertexFactor, previousCursor.y - previousCursor.w);
+    vec2 v1 = vec2(currentCursor.x + currentCursor.z * xMenorFactor, currentCursor.y - currentCursor.w * yMenorFactor);
+    vec2 v2 = vec2(currentCursor.x + currentCursor.z * invertedVertexFactor, currentCursor.y);
+    vec2 v3 = centerCP;
 
     float sdfCurrentCursor = getSdfRectangle(vu, currentCursor.xy - (currentCursor.zw * offsetFactor), currentCursor.zw * 0.5);
     float sdfTrail = getSdfParallelogram(vu, v0, v1, v2, v3);
