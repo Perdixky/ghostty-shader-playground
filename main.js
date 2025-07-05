@@ -11,7 +11,7 @@ function changeCursorType(x, y) {
 let wrapShader = undefined;
 
 let config = JSON.parse(localStorage.getItem("config")) || {
-  canvas: ["cursor_blaze.glsl", "cursor_frozen.glsl"],
+  canvas: ["cursor_blaze.glsl", "debug_cursor_static.glsl"],
 };
 
 function changeMode(_mode) {
