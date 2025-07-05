@@ -11,6 +11,9 @@ uniform vec2 u_resolution;
 uniform vec4 iCurrentCursor;
 uniform vec4 iPreviousCursor;
 uniform float iTimeCursorChange;
+uniform float iTimeCursorChange;
+uniform vec4 iCurrentCursorColor;
+uniform vec4 iPreviousCursorColor;
 
 //$REPLACE$
 
