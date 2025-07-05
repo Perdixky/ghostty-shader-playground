@@ -8,6 +8,11 @@ function changeCursorType(x, y) {
   cursorWidth = x;
   cursorHeight = y;
 }
+let wrapShader = undefined;
+
+let config = JSON.parse(localStorage.getItem("config")) || {
+  canvas: ["cursor_blaze.glsl", "cursor_frozen.glsl"],
+};
 
 function changeMode(_mode) {
   mode = _mode;
@@ -58,25 +63,36 @@ let currentCursor = { x: 0, y: 0, z: 10, w: 20 };
 let option = 0;
 Promise.all([
   fetch("ghostty_wrapper.glsl").then((response) => response.text()),
-  Promise.all([
-    // fetch("/shaders/debug_cursor_animated.glsl").then((response) =>
-    //   response.text(),
-    // ),
-    fetch("/shaders/cursor_blaze.glsl").then((response) => response.text()),
-    fetch("/shaders/WIP.glsl").then((response) => response.text()),
-  ]),
-]).then(([ghosttyWrapper, shaders]) => {
-  const wrapShader = (shader) => ghosttyWrapper.replace("//$REPLACE$", shader);
-  shaders.forEach((shader) => {
-    const sandbox = init(wrapShader(shader));
+  fetch("/shaders-list").then((response) => response.json()),
+]).then(([ghosttyWrapper, list]) => {
+  wrapShader = (shader) => ghosttyWrapper.replace("//$REPLACE$", shader);
+  config.canvas.forEach((shader, index) => {
+    const sandbox = init(index, shader, list);
     sandboxes.push(sandbox);
   });
   setGrid();
 });
 
-function init(shader) {
+async function fetchShaders() {
+  const response = await fetch("/shaders-list");
+  return await response.json();
+}
+
+function init(index, shader, list) {
   const canvasWrapper = document.createElement("div");
   canvasWrapper.className = "_canvas-wrapper";
+
+  const selectMenu = document.createElement("select");
+  const shaders = list;
+
+  shaders.forEach((shader) => {
+    const option = document.createElement("option");
+    option.value = shader; // Assuming shader has an 'id' property
+    option.textContent = shader; // Assuming shader has a 'name' property
+    selectMenu.appendChild(option);
+  });
+
+  canvasWrapper.appendChild(selectMenu);
 
   const canvas = document.createElement("canvas");
   canvasWrapper.appendChild(canvas);
@@ -84,7 +100,6 @@ function init(shader) {
   canvas.width = canvasWrapper.clientWidth;
   canvas.height = canvasWrapper.clientHeight;
   const sandbox = new GlslCanvas(canvas);
-  sandbox.load(shader);
   canvas.addEventListener("click", (event) => {
     if (mode != "click") {
       return;
@@ -97,6 +112,23 @@ function init(shader) {
     setCursorUniforms();
   });
   masterCanvas = canvas;
+
+  selectMenu.addEventListener("change", (event) => {
+    const selectedShader = event.target.value;
+    config.canvas[index] = selectedShader;
+    fetch(`shaders/${selectedShader}`)
+      .then((response) => {
+        return response.text();
+      })
+      .then((shaderCode) => {
+        let newShader = wrapShader(shaderCode);
+        sandbox.load(newShader);
+        localStorage.setItem("config", JSON.stringify(config));
+      });
+  });
+  selectMenu.value = shader;
+  selectMenu.dispatchEvent(new Event("change"));
+  console.log(shader, ":KROE");
   return sandbox;
 }
 
@@ -117,6 +149,7 @@ function setCursorUniforms() {
       previousCursor.z,
       previousCursor.w,
     );
+    sandbox.setUniform("iCurrentCursorColor", 1, 0, 0, 0);
     let now = sandbox.uniforms["u_time"].value[0];
     sandbox.setUniform("iTimeCursorChange", now);
   });

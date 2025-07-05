@@ -8,6 +8,14 @@
       type="text/javascript"
       src="https://rawgit.com/patriciogonzalezvivo/glslCanvas/master/dist/GlslCanvas.js"
     ></script>
+    <script>
+      const ws = new WebSocket("ws://localhost:3000");
+      ws.onmessage = (msg) => {
+        if (msg.data === "reload") {
+          location.reload();
+        }
+      };
+    </script>
     <style>
       html,
       body {
@@ -61,6 +69,12 @@
 
       ._button:hover {
         background: #7d86a3;
+      }
+      select {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        height: 24px;
       }
     </style>
   </head>
