@@ -12,7 +12,20 @@ let wrapShader = undefined;
 
 let config = JSON.parse(localStorage.getItem("config")) || {
   canvas: ["cursor_blaze.glsl", "debug_cursor_static.glsl"],
+  cursorColor: [1, 0, 0, 1],
 };
+
+function hexToRgbNormalized(hex) {
+  let r = parseInt(hex.substr(1, 2), 16) / 255;
+  let g = parseInt(hex.substr(3, 2), 16) / 255;
+  let b = parseInt(hex.substr(5, 2), 16) / 255;
+  return [r, g, b, 1];
+}
+const cursorColorInput = document.getElementById("cursorColor");
+cursorColorInput.addEventListener("input", () => {
+  const hex = cursorColorInput.value;
+  config.cursorColor = hexToRgbNormalized(hex);
+});
 
 function changeMode(_mode) {
   mode = _mode;
@@ -128,7 +141,6 @@ function init(index, shader, list) {
   });
   selectMenu.value = shader;
   selectMenu.dispatchEvent(new Event("change"));
-  console.log(shader, ":KROE");
   return sandbox;
 }
 
@@ -149,7 +161,13 @@ function setCursorUniforms() {
       previousCursor.z,
       previousCursor.w,
     );
-    sandbox.setUniform("iCurrentCursorColor", 1, 0, 0, 0);
+    sandbox.setUniform(
+      "iCurrentCursorColor",
+      config.cursorColor[0],
+      config.cursorColor[1],
+      config.cursorColor[2],
+      config.cursorColor[3],
+    );
     let now = sandbox.uniforms["u_time"].value[0];
     sandbox.setUniform("iTimeCursorChange", now);
   });
@@ -180,7 +198,6 @@ document.addEventListener("keydown", function (event) {
         break;
     }
 
-    console.log(event.key);
     // You can specify a specific key if needed
     moveCursor(currentCursor.x + increment.x, currentCursor.y + increment.y);
     setCursorUniforms();
@@ -211,7 +228,6 @@ document.addEventListener("contextmenu", function (event) {
 });
 
 function changePresetPosition(increment) {
-  console.log("magia negra");
   let bottom = masterCanvas.height * 0.1;
   let top = masterCanvas.height * 0.9;
   let left = masterCanvas.width * 0.1;
