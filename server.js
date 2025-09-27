@@ -5,43 +5,51 @@ const WebSocket = require("ws");
 
 const PORT = 3000;
 const ROOT_DIR = __dirname;
-const SHADERS_DIR = path.join(ROOT_DIR, "shaders");
-const PUBLIC_FILES = ["index.html", "main.js", "ghostty_wrapper.glsl"];
+const PUBLIC_DIR = path.join(ROOT_DIR, "public");
+const SHADERS_DIR = path.join(ROOT_DIR, "public", "shaders");
+
+const args = process.argv.slice(2);
+const shouldOpenBrowser = args.includes("--open") || args.includes("-o");
 
 const MIME_TYPES = {
   ".html": "text/html",
   ".js": "application/javascript",
   ".glsl": "text/plain",
   ".json": "application/json",
+  ".css": "text/css",
+  ".ico": "image/x-icon",
+  ".png": "image/png",
 };
 
 const server = http.createServer(handleRequest);
 
 function handleRequest(req, res) {
-  const urlPath = req.url === "/" ? "/index.html" : req.url;
-  const filePath = path.join(ROOT_DIR, urlPath);
+  const safeUrl = req.url.split("?")[0].split("#")[0];
+  const urlPath = safeUrl === "/" ? "/index.html" : safeUrl;
+  const requestedPath = path.join(PUBLIC_DIR, urlPath);
+  const normalizedPath = path.normalize(requestedPath);
 
   if (req.url === "/shaders-list") {
     return listShaders(res);
   }
 
-  if (
-    req.url.startsWith("/shaders/") ||
-    PUBLIC_FILES.includes(urlPath.slice(1))
-  ) {
-    return serveFile(
-      filePath,
-      MIME_TYPES[path.extname(filePath)] || "application/octet-stream",
-      res,
-    );
+  if (!normalizedPath.startsWith(PUBLIC_DIR)) {
+    return notFound(res);
   }
 
-  return notFound(res);
+  return serveFile(
+    normalizedPath,
+    MIME_TYPES[path.extname(normalizedPath)] || "application/octet-stream",
+    res,
+  );
 }
 
 function serveFile(filePath, mimeType, res) {
   fs.readFile(filePath, (err, content) => {
     if (err) {
+      if (err.code === "ENOENT") {
+        return notFound(res);
+      }
       console.error(`Error reading file: ${filePath}`, err);
       res.writeHead(500, { "Content-Type": "text/plain" });
       return res.end("Server error");
@@ -83,21 +91,21 @@ function broadcastReload() {
 }
 
 function watchForChanges() {
-  const watchPaths = [
-    ...PUBLIC_FILES.map((f) => path.join(ROOT_DIR, f)),
-    SHADERS_DIR,
-  ];
+  const toWatch = [PUBLIC_DIR];
 
-  for (const p of watchPaths) {
+  for (const p of toWatch) {
     try {
       const stats = fs.lstatSync(p);
       if (stats.isDirectory()) {
-        fs.watch(p, (event, filename) => {
-          if (filename && filename.endsWith(".glsl")) {
-            console.log(`Shader changed: ${filename}`);
+        try {
+          fs.watch(p, { recursive: true }, (event, filename) => {
+            if (!filename) return;
+            console.log(`Changed: ${filename}`);
             broadcastReload();
-          }
-        });
+          });
+        } catch (recursiveError) {
+          watchDirectoryRecursively(p);
+        }
       } else {
         fs.watchFile(p, () => {
           console.log(`File changed: ${path.basename(p)}`);
@@ -110,8 +118,94 @@ function watchForChanges() {
   }
 }
 
+function watchDirectoryRecursively(dirPath) {
+  fs.watch(dirPath, (event, filename) => {
+    if (!filename) return;
+    console.log(`Changed: ${filename}`);
+    broadcastReload();
+  });
+
+  try {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const subDirPath = path.join(dirPath, entry.name);
+        watchDirectoryRecursively(subDirPath);
+      }
+    }
+  } catch (err) {
+    console.error(`Error reading directory ${dirPath}:`, err);
+  }
+}
+
 watchForChanges();
 
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+
+  if (shouldOpenBrowser) {
+    const { exec } = require("child_process");
+    const url = `http://localhost:${PORT}`;
+
+    const commands = [
+      "xdg-open", // Linux
+      "open", // macOS
+      "start", // Windows
+    ];
+
+    let commandIndex = 0;
+    const tryOpenBrowser = () => {
+      if (commandIndex >= commands.length) {
+        console.log(`Please open your browser and navigate to: ${url}`);
+        return;
+      }
+
+      const command = commands[commandIndex];
+      exec(`${command} ${url}`, (error) => {
+        if (error) {
+          commandIndex++;
+          tryOpenBrowser();
+        } else {
+          console.log(`Browser opened: ${url}`);
+        }
+      });
+    };
+
+    // wait a moment for the server to be ready
+    setTimeout(tryOpenBrowser, 500);
+  }
 });
+
+let isShuttingDown = false;
+
+function gracefulShutdown(signal) {
+  if (isShuttingDown) {
+    return;
+  }
+
+  isShuttingDown = true;
+  console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.close();
+    }
+  });
+
+  wss.close(() => {
+    console.log("WebSocket server closed");
+  });
+
+  server.close(() => {
+    console.log("HTTP server closed");
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.log("Force closing server...");
+    process.exit(1);
+  }, 3000);
+}
+
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
