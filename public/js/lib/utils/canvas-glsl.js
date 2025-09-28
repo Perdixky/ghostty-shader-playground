@@ -38,14 +38,10 @@ class CanvasGLSL {
     }
 
     this.resizeCanvas();
-
-    const resizeHandler = () => this.resizeCanvas();
-    window.addEventListener("resize", resizeHandler);
-    this.eventListeners.set("resize", {
-      element: window,
-      handler: resizeHandler,
-      type: "resize",
+    const resizeObserver = new ResizeObserver(() => {
+      this.resizeCanvas();
     });
+    resizeObserver.observe(this.canvas);
 
     const contextLossHandler = () => {
       console.warn("WebGL context lost, attempting to restore...");
