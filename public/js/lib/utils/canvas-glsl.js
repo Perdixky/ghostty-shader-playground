@@ -147,7 +147,6 @@ class CanvasGLSL {
    * @returns {WebGLShader} Compiled shader
    */
   compileShader(source, type) {
-    console.log(type);
     const shader = this.gl.createShader(type);
     this.gl.shaderSource(shader, source);
     this.gl.compileShader(shader);
