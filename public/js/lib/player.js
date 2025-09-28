@@ -49,8 +49,31 @@ class ShaderPlayer {
       const y = this.canvas.height - (event.clientY - rect.top);
       this.bus.emit({ type: "click", data: { x, y } });
     });
-    this.bus.subscribe((event) => {
-      this.updateCursor(event.data.x, event.data.y);
+    var eventBus = this.bus.subscribe((event) => {
+      if (event.type == "changeCursor") {
+        this.updateCursor(null, null, event.data.width, event.data.height);
+      }
+      if (event.type == "click") {
+        if (this.tickFunction) {
+          this.tickFunction();
+        } else {
+          this.updateCursor(event.data.x, event.data.y);
+        }
+      }
+      if (event.type == "changeMode") {
+        switch (event.data) {
+          case "auto":
+            this.tickFunction = () => {
+              this.changePresetPosition(1);
+            };
+            break;
+          case "click":
+            this.tickFunction = null;
+            break;
+          case "rnd":
+            this.tickFunction = this.randomCursor;
+        }
+      }
     });
   }
 
