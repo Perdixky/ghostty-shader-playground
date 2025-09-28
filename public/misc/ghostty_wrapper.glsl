@@ -1,7 +1,12 @@
 #version 300 es
 #define WEB 1
-
+#ifdef GL_ES
 precision highp float;
+precision highp int;
+precision mediump sampler3D;
+#endif
+#define HW_PERFORMANCE 1
+
 uniform vec2 iResolution;
 uniform float iTime;
 uniform vec4 iCurrentCursor;
