@@ -24,7 +24,7 @@ class ShaderPlayer {
   clickListener;
   bus;
   cursor = { x: 0, y: 0, w: 10, h: 20 };
-  cursorColor = { r: 0, g: 0, b: 255 };
+  cursorColor = [0, 0, 1, 1];
   presetPosition = 0;
   index = -1;
   tickFunction = () => {
@@ -42,7 +42,7 @@ class ShaderPlayer {
     this.wrapper.appendChild(selectMenu);
     selectMenu.value = store.config.canvas[index] ?? "debug_cursor_static.glsl";
     selectMenu.dispatchEvent(new Event("change"));
-
+    this.cursorColor = hexToRgbNormalized(store.config.cursorColor);
     this.canvas = document.createElement("canvas");
     this.canvas.width = this.wrapper.clientWidth;
     this.canvas.height = this.wrapper.clientHeight;
@@ -59,12 +59,14 @@ class ShaderPlayer {
     });
     var eventBus = this.bus.subscribe((event) => {
       if (event.type == "cursorColor") {
-        let newColor = hexToRgbNormalized(event.data);
-        this.cursorColor = { r: newColor[0], g: newColor[1], b: newColor[2] };
-        this.updateCursorColor(this.cursorColor);
+        this.updateCursorColor(hexToRgbNormalized(event.data));
+        store.config.cursorColor = event.data;
+        store.config.save();
       }
       if (event.type == "backgroundColor") {
         this.canvas.style.background = event.data;
+        store.config.backgroundColor = event.data;
+        store.config.save();
       }
       if (event.type == "keyboard") {
         switch (event.data) {
@@ -216,13 +218,7 @@ class ShaderPlayer {
   }
 
   updateCursorColor(color) {
-    this.renderer.setUniform(
-      "iCurrentCursorColor",
-      color.r,
-      color.g,
-      color.b,
-      1,
-    );
+    this.renderer.setUniform("iCurrentCursorColor", ...color);
   }
 }
 
