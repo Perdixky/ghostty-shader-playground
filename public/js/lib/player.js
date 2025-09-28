@@ -1,4 +1,4 @@
-import { CanvasGLSL } from "./utils/canvas-glsl.js";
+import { CanvasGLSL } from "./canvas-glsl.js";
 import { Bus } from "./bus.js";
 import { store } from "./store.js";
 import { getShader } from "./service.js";
