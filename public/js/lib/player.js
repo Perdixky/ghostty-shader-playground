@@ -113,10 +113,10 @@ class ShaderPlayer {
   }
 
   tick() {
-    this.tickFunction();
+    if (this.tickFunction) {
+      this.tickFunction();
+    }
   }
-
-  onClick() {}
 
   randomCursor() {
     if (!this.canvas) {

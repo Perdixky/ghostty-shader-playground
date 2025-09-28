@@ -29,6 +29,9 @@ window.changeCursorType = (width, height) => {
 window.changeMode = (mode) => {
   eventBus.emit({ type: "changeMode", data: mode });
 };
+window.addEventListener("resize", function () {
+  setGrid();
+});
 
 var configuration = new Configuration();
 configuration.save();
@@ -38,25 +41,27 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
   ([ghosttyWrapper, list]) => {
     store.wrapper = ghosttyWrapper;
     store.shaderList = list;
-
     let wrapShader = (shader) => ghosttyWrapper.replace("//$REPLACE$", shader);
     configuration.canvas.forEach((shader, index) => {
       var player = new ShaderPlayer(playground, eventBus);
       players.push(player);
-      let gridValue = players.reduce((a, b) => a + " 1fr", "");
-      const isVertical = window.innerHeight > window.innerWidth;
-      if (isVertical) {
-        playground.style.gridTemplateColumns = "unset";
-        playground.style.gridTemplateRows = gridValue;
-      } else {
-        playground.style.gridTemplateColumns = gridValue;
-        playground.style.gridTemplateRows = "unset";
-      }
       getShader(shader).then((shaderContent) => {
         var fragment = wrapShader(shaderContent);
         player.play(fragment);
       });
     });
-    // setGrid();
+    setGrid();
   },
 );
+
+function setGrid() {
+  let gridValue = players.reduce((a, b) => a + " 1fr", "");
+  const isVertical = window.innerHeight > window.innerWidth;
+  if (isVertical) {
+    playground.style.gridTemplateColumns = "unset";
+    playground.style.gridTemplateRows = gridValue;
+  } else {
+    playground.style.gridTemplateColumns = gridValue;
+    playground.style.gridTemplateRows = "unset";
+  }
+}
