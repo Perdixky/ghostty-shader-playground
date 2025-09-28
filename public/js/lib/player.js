@@ -2,6 +2,7 @@ import { CanvasGLSL } from "./canvas-glsl.js";
 import { Bus } from "./bus.js";
 import { store } from "./store.js";
 import { getShader } from "./service.js";
+import { hexToRgbNormalized } from "./utils.js";
 
 /**
  * @class ShaderPlayer
@@ -56,6 +57,11 @@ class ShaderPlayer {
       this.bus.emit({ type: "click", data: { x, y } });
     });
     var eventBus = this.bus.subscribe((event) => {
+      if (event.type == "cursorColor") {
+        let newColor = hexToRgbNormalized(event.data);
+        this.cursorColor = { r: newColor[0], g: newColor[1], b: newColor[2] };
+        this.updateCursorColor(this.cursorColor);
+      }
       if (event.type == "keyboard") {
         switch (event.data) {
           case "up":

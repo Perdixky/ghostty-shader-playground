@@ -1,4 +1,3 @@
-import { Configuration } from "./lib/config.js";
 import { ShaderPlayer } from "./lib/player.js";
 import { Bus } from "./lib/bus.js";
 import { store } from "./lib/store.js";
@@ -53,6 +52,10 @@ window.addEventListener("keydown", function (event) {
     }
     eventBus.emit({ type: "keyboard", data: move });
   }
+});
+
+document.getElementById("cursorColor").addEventListener("input", (event) => {
+  eventBus.emit({ type: "cursorColor", data: event.target.value });
 });
 
 const playground = document.getElementById("playground");
