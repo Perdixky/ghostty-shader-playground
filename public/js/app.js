@@ -32,6 +32,28 @@ window.changeMode = (mode) => {
 window.addEventListener("resize", function () {
   setGrid();
 });
+window.addEventListener("keydown", function (event) {
+  if (event.key) {
+    let move = "right";
+    switch (event.key) {
+      case "Enter":
+      case "ArrowDown":
+        move = "down";
+        break;
+      case "ArrowLeft":
+      case "Backspace":
+        move = "left";
+        break;
+      case "ArrowUp":
+        move = "up";
+        break;
+      default:
+        move = "right";
+        break;
+    }
+    eventBus.emit({ type: "keyboard", data: move });
+  }
+});
 
 const playground = document.getElementById("playground");
 Promise.all([getGhosttyWrapper(), getShaderList()]).then(

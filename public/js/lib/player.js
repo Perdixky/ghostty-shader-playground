@@ -56,6 +56,22 @@ class ShaderPlayer {
       this.bus.emit({ type: "click", data: { x, y } });
     });
     var eventBus = this.bus.subscribe((event) => {
+      if (event.type == "keyboard") {
+        switch (event.data) {
+          case "up":
+            this.updateCursor(this.cursor.x, this.cursor.y + this.cursor.h);
+            break;
+          case "down":
+            this.updateCursor(this.cursor.x, this.cursor.y - this.cursor.h);
+            break;
+          case "left":
+            this.updateCursor(this.cursor.x - this.cursor.w, this.cursor.y);
+            break;
+          case "right":
+            this.updateCursor(this.cursor.x + this.cursor.w, this.cursor.y);
+            break;
+        }
+      }
       if (event.type == "changeCursor") {
         this.updateCursor(null, null, event.data.width, event.data.height);
       }
@@ -63,6 +79,7 @@ class ShaderPlayer {
         if (this.tickFunction) {
           this.tickFunction();
         } else {
+          console.log(event.data.x, event.data.y);
           this.updateCursor(event.data.x, event.data.y);
         }
       }
