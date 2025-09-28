@@ -17,7 +17,7 @@ function setTickRate(interval) {
 }
 
 function tick() {
-  players[0].tick();
+  players.forEach((p) => p.tick());
 }
 setTickRate(1000);
 const eventBus = new Bus();
@@ -43,7 +43,7 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
     store.shaderList = list;
     let wrapShader = (shader) => ghosttyWrapper.replace("//$REPLACE$", shader);
     configuration.canvas.forEach((shader, index) => {
-      var player = new ShaderPlayer(playground, eventBus);
+      var player = new ShaderPlayer(index, playground, eventBus);
       players.push(player);
       getShader(shader).then((shaderContent) => {
         var fragment = wrapShader(shaderContent);

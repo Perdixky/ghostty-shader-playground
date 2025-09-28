@@ -25,6 +25,7 @@ class ShaderPlayer {
   cursor = { x: 0, y: 0, w: 10, h: 20 };
   cursorColor = { r: 0, g: 0, b: 255 };
   presetPosition = 0;
+  index = -1;
   tickFunction = () => {
     this.changePresetPosition(1);
   };
@@ -32,7 +33,8 @@ class ShaderPlayer {
    * @param {HTMLElement} playground
    * @param {Bus} bus
    */
-  constructor(playground, bus) {
+  constructor(index, playground, bus) {
+    this.index = index;
     this.wrapper = document.createElement("div");
     this.wrapper.className = "_canvas-wrapper";
 
