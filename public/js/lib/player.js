@@ -200,7 +200,8 @@ class ShaderPlayer {
       this.cursor.w,
       this.cursor.h,
     );
-    let now = performance.now() / 1000;
+    //NOTE: i dont like this.
+    let now = this.renderer.uniforms["iTime"].value[0][0];
     this.renderer.setUniform("iTimeCursorChange", now);
   }
 
