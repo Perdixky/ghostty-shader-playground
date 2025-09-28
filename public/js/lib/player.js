@@ -37,8 +37,10 @@ class ShaderPlayer {
     this.index = index;
     this.wrapper = document.createElement("div");
     this.wrapper.className = "_canvas-wrapper";
-
-    this.wrapper.appendChild(this._createShaderListSelect());
+    let selectMenu = this._createShaderListSelect();
+    this.wrapper.appendChild(selectMenu);
+    selectMenu.value = store.config.canvas[index] ?? "debug_cursor_static.glsl";
+    selectMenu.dispatchEvent(new Event("change"));
 
     this.canvas = document.createElement("canvas");
     this.canvas.width = this.wrapper.clientWidth;
@@ -92,16 +94,16 @@ class ShaderPlayer {
     });
 
     selectMenu.addEventListener("change", (event) => {
-      const selectedShader = event.target.value;
+      const shaderName = event.target.value;
       let wrapShader = (shader) => store.wrapper.replace("//$REPLACE$", shader);
-      getShader(selectedShader).then((shaderCode) => {
+      getShader(shaderName).then((shaderCode) => {
+        store.config.canvas[this.index] = shaderName;
+        store.config.save();
         var fragment = wrapShader(shaderCode);
         this.play(fragment);
       });
     });
     return selectMenu;
-    // selectMenu.value = shader;
-    // selectMenu.dispatchEvent(new Event("change"));
   }
 
   /**

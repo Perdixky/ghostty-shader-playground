@@ -2,7 +2,7 @@ import { Configuration } from "./lib/config.js";
 import { ShaderPlayer } from "./lib/player.js";
 import { Bus } from "./lib/bus.js";
 import { store } from "./lib/store.js";
-import { getShaderList, getGhosttyWrapper, getShader } from "./lib/service.js";
+import { getShaderList, getGhosttyWrapper } from "./lib/service.js";
 
 let intervalId = undefined;
 let players = [];
@@ -33,22 +33,14 @@ window.addEventListener("resize", function () {
   setGrid();
 });
 
-var configuration = new Configuration();
-configuration.save();
-
 const playground = document.getElementById("playground");
 Promise.all([getGhosttyWrapper(), getShaderList()]).then(
   ([ghosttyWrapper, list]) => {
     store.wrapper = ghosttyWrapper;
     store.shaderList = list;
-    let wrapShader = (shader) => ghosttyWrapper.replace("//$REPLACE$", shader);
-    configuration.canvas.forEach((shader, index) => {
+    store.config.canvas.forEach((shader, index) => {
       var player = new ShaderPlayer(index, playground, eventBus);
       players.push(player);
-      getShader(shader).then((shaderContent) => {
-        var fragment = wrapShader(shaderContent);
-        player.play(fragment);
-      });
     });
     setGrid();
   },
