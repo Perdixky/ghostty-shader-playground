@@ -1,6 +1,7 @@
 import { CanvasGLSL } from "./utils/canvas-glsl.js";
 import { Bus } from "./bus.js";
 import { store } from "./store.js";
+import { getShader } from "./service.js";
 
 /**
  * @class ShaderPlayer
@@ -22,6 +23,7 @@ class ShaderPlayer {
   clickListener;
   bus;
   cursor = { x: 0, y: 0, w: 10, h: 20 };
+  cursorColor = { r: 0, g: 0, b: 255 };
   presetPosition = 0;
   tickFunction = () => {
     this.changePresetPosition(1);
@@ -90,14 +92,10 @@ class ShaderPlayer {
     selectMenu.addEventListener("change", (event) => {
       const selectedShader = event.target.value;
       let wrapShader = (shader) => store.wrapper.replace("//$REPLACE$", shader);
-      fetch(`shaders/${selectedShader}`)
-        .then((response) => {
-          return response.text();
-        })
-        .then((shaderCode) => {
-          var fragment = wrapShader(shaderCode);
-          this.play(fragment);
-        });
+      getShader(selectedShader).then((shaderCode) => {
+        var fragment = wrapShader(shaderCode);
+        this.play(fragment);
+      });
     });
     return selectMenu;
     // selectMenu.value = shader;
@@ -111,11 +109,11 @@ class ShaderPlayer {
     this.renderer.stop();
     this.renderer.loadShader(this.vertex, fragmentShadder);
     this.renderer.start();
-    this.renderer.setUniform("iCurrentCursorColor", 0, 0, 255, 1);
+    this.updateCursorColor(this.cursorColor);
   }
+
   tick() {
     this.tickFunction();
-    // this.changePresetPosition(1);
   }
 
   onClick() {}
@@ -183,6 +181,16 @@ class ShaderPlayer {
     );
     let now = performance.now() / 1000;
     this.renderer.setUniform("iTimeCursorChange", now);
+  }
+
+  updateCursorColor(color) {
+    this.renderer.setUniform(
+      "iCurrentCursorColor",
+      color.r,
+      color.g,
+      color.b,
+      1,
+    );
   }
 }
 

@@ -2,11 +2,10 @@ import { Configuration } from "./lib/config.js";
 import { ShaderPlayer } from "./lib/player.js";
 import { Bus } from "./lib/bus.js";
 import { store } from "./lib/store.js";
+import { getShaderList, getGhosttyWrapper, getShader } from "./lib/service.js";
 
-//PIT OF SHAME:
 let intervalId = undefined;
 let players = [];
-//END
 
 function setTickRate(interval) {
   if (intervalId) {
@@ -21,8 +20,7 @@ function tick() {
   players[0].tick();
 }
 setTickRate(1000);
-
-var eventBus = new Bus();
+const eventBus = new Bus();
 
 window.changeCursorType = (width, height) => {
   eventBus.emit({ type: "changeCursor", data: { width, height } });
@@ -45,6 +43,15 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
     configuration.canvas.forEach((shader, index) => {
       var player = new ShaderPlayer(playground, eventBus);
       players.push(player);
+      let gridValue = players.reduce((a, b) => a + " 1fr", "");
+      const isVertical = window.innerHeight > window.innerWidth;
+      if (isVertical) {
+        playground.style.gridTemplateColumns = "unset";
+        playground.style.gridTemplateRows = gridValue;
+      } else {
+        playground.style.gridTemplateColumns = gridValue;
+        playground.style.gridTemplateRows = "unset";
+      }
       getShader(shader).then((shaderContent) => {
         var fragment = wrapShader(shaderContent);
         player.play(fragment);
@@ -53,16 +60,3 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
     // setGrid();
   },
 );
-
-async function getShader(name) {
-  const response = await fetch(`shaders/${name}`);
-  return await response.text();
-}
-async function getShaderList() {
-  const response = await fetch("/shaders-list");
-  return await response.json();
-}
-async function getGhosttyWrapper() {
-  const response = await fetch("misc/ghostty_wrapper.glsl");
-  return await response.text();
-}
