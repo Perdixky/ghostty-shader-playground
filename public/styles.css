@@ -11,7 +11,7 @@ body {
   background: #212638;
 }
 ._canvas-wrapper {
-  background: #0b0e14;
+  /* background: #0b0e14; */
   position: relative;
   overflow: auto;
   height: 100%;

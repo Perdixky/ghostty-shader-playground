@@ -18,7 +18,7 @@ function setTickRate(interval) {
 function tick() {
   players.forEach((p) => p.tick());
 }
-setTickRate(1000);
+setTickRate(500);
 const eventBus = new Bus();
 
 window.changeCursorType = (width, height) => {
@@ -54,8 +54,16 @@ window.addEventListener("keydown", function (event) {
   }
 });
 
-document.getElementById("cursorColor").addEventListener("input", (event) => {
+let cursorColorInput = document.getElementById("cursorColor");
+cursorColorInput.value = store.config.cursorColor;
+cursorColorInput.addEventListener("input", (event) => {
   eventBus.emit({ type: "cursorColor", data: event.target.value });
+});
+
+let backgroundColorInput = document.getElementById("backgroundColor");
+backgroundColorInput.value = store.config.backgroundColor;
+backgroundColorInput.addEventListener("input", (event) => {
+  eventBus.emit({ type: "backgroundColor", data: event.target.value });
 });
 
 const playground = document.getElementById("playground");

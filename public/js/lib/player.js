@@ -46,6 +46,7 @@ class ShaderPlayer {
     this.canvas = document.createElement("canvas");
     this.canvas.width = this.wrapper.clientWidth;
     this.canvas.height = this.wrapper.clientHeight;
+    this.canvas.style.background = store.config.backgroundColor;
     this.wrapper.appendChild(this.canvas);
     playground.appendChild(this.wrapper);
     this.renderer = new CanvasGLSL(this.canvas);
@@ -61,6 +62,9 @@ class ShaderPlayer {
         let newColor = hexToRgbNormalized(event.data);
         this.cursorColor = { r: newColor[0], g: newColor[1], b: newColor[2] };
         this.updateCursorColor(this.cursorColor);
+      }
+      if (event.type == "backgroundColor") {
+        this.canvas.style.background = event.data;
       }
       if (event.type == "keyboard") {
         switch (event.data) {

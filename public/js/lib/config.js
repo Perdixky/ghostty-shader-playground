@@ -1,7 +1,7 @@
 class Configuration {
-  canvas = ["cursor_blaze.glsl", "debug_cursor_static.glsl"];
-  cursorColor = [1, 0, 0, 1];
-  magia = [1];
+  canvas = ["cursor_smear.glsl", "debug_cursor_static.glsl"];
+  backgroundColor = "#0b0e14";
+  cursorColor = "#fedf16";
 
   constructor() {
     let memory = JSON.parse(localStorage.getItem("config"));
