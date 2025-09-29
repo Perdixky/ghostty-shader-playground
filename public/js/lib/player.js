@@ -38,10 +38,22 @@ class ShaderPlayer {
     this.index = index;
     this.wrapper = document.createElement("div");
     this.wrapper.className = "_canvas-wrapper";
+
+    //CREATE TOOLBOX
+    let toolboxEl = this._createButtonWrapper();
+    this.wrapper.appendChild(toolboxEl);
+    //SELECT MENU
     let selectMenu = this._createShaderListSelect();
-    this.wrapper.appendChild(selectMenu);
+    toolboxEl.appendChild(selectMenu);
     selectMenu.value = store.config.canvas[index] ?? "debug_cursor_static.glsl";
     selectMenu.dispatchEvent(new Event("change"));
+    //PIP BUTTON
+    let pipButton = this._createPiPButton();
+    toolboxEl.appendChild(pipButton);
+    //REMOVE BUTTON
+    let removeButton = this._createRemoveButton();
+    toolboxEl.appendChild(removeButton);
+
     this.cursorColor = hexToRgbNormalized(store.config.cursorColor);
     this.canvas = document.createElement("canvas");
     this.canvas.width = this.wrapper.clientWidth;
@@ -112,6 +124,36 @@ class ShaderPlayer {
     });
   }
 
+  _createButtonWrapper() {
+    const div = document.createElement("div");
+    div.classList.add("_toolbox");
+    return div;
+  }
+  _createPiPButton() {
+    const button = document.createElement("button");
+    button.classList.add("_button");
+    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#333"><path d="M80-520v-80h144L52-772l56-56 172 172v-144h80v280H80Zm80 360q-33 0-56.5-23.5T80-240v-200h80v200h320v80H160Zm640-280v-280H440v-80h360q33 0 56.5 23.5T880-720v280h-80ZM560-160v-200h320v200H560Z"/></svg>`;
+    button.addEventListener("click", async () => {
+      try {
+        const stream = this.canvas.captureStream(30); // 30 fps
+        store.video.srcObject = stream;
+        // ensure video is playing before PiP
+        await store.video.play();
+        // enter picture-in-picture
+        await store.video.requestPictureInPicture();
+      } catch (err) {
+        console.error("Failed to enter PiP:", err);
+      }
+    });
+
+    return button;
+  }
+  _createRemoveButton() {
+    const button = document.createElement("button");
+    button.classList.add("_button");
+    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ff0000"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`;
+    return button;
+  }
   _createShaderListSelect() {
     const selectMenu = document.createElement("select");
 

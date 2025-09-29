@@ -21,6 +21,11 @@ body {
   height: 100%;
   width: 100%;
 }
+._canvas-wrapper > ._toolbox {
+  position: absolute;
+  bottom: 0px;
+  right: 10px;
+}
 canvas {
   height: 100%;
   width: 100%;
@@ -55,10 +60,11 @@ canvas {
   background: #7d86a3;
 }
 select {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  height: 24px;
+  height: 34px;
+  background: #212638;
+  color: #f3f3f3;
+  font-weight: bold;
+  border-radius: 3px;
 }
 .d-flex {
   display: flex;
