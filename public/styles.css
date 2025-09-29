@@ -17,12 +17,13 @@ body {
 ._canvas-wrapper {
   /* background: #0b0e14; */
   position: relative;
-  overflow: auto;
   height: 100%;
   width: 100%;
+  overflow: visible;
 }
 ._canvas-wrapper > ._toolbox {
   position: absolute;
+  overflow: visible;
   bottom: 0px;
   right: 10px;
 }

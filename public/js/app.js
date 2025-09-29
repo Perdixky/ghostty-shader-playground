@@ -24,6 +24,9 @@ const eventBus = new Bus();
 window.changeCursorType = (width, height) => {
   eventBus.emit({ type: "changeCursor", data: { width, height } });
 };
+window.addPlayer = () => {
+  addPlayer(players.length);
+};
 
 window.changeMode = (mode) => {
   eventBus.emit({ type: "changeMode", data: mode });
@@ -80,16 +83,25 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
     store.wrapper = ghosttyWrapper;
     store.shaderList = list;
     store.config.canvas.forEach((shader, index) => {
-      var player = new ShaderPlayer(index, playground, eventBus, (player) => {
-        player.wrapper.remove();
-        players = players.filter((p) => p !== player);
-        setGrid();
-      });
-      players.push(player);
+      addPlayer(index);
     });
-    setGrid();
   },
 );
+
+function addPlayer(index) {
+  var player = new ShaderPlayer(index, playground, eventBus, removePlayer);
+  players.push(player);
+  setGrid();
+}
+
+function removePlayer(player) {
+  player.wrapper.remove();
+  let index = players.findIndex((p) => p === player);
+  store.config.canvas.splice(index, 1);
+  store.config.save();
+  players = players.filter((p) => p !== player);
+  setGrid();
+}
 
 function setGrid() {
   let gridValue = players.reduce((a, b) => a + " 1fr", "");
