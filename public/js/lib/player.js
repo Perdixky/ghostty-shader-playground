@@ -100,16 +100,16 @@ class ShaderPlayer {
       if (event.type == "keyboard") {
         switch (event.data) {
           case "up":
-            this.updateCursor(this.cursor.x, this.cursor.y + this.cursor.h);
+            this.updateCursor(this.cursor.x, this.cursor.y + 20);
             break;
           case "down":
-            this.updateCursor(this.cursor.x, this.cursor.y - this.cursor.h);
+            this.updateCursor(this.cursor.x, this.cursor.y - 20);
             break;
           case "left":
-            this.updateCursor(this.cursor.x - this.cursor.w, this.cursor.y);
+            this.updateCursor(this.cursor.x - 10, this.cursor.y);
             break;
           case "right":
-            this.updateCursor(this.cursor.x + this.cursor.w, this.cursor.y);
+            this.updateCursor(this.cursor.x + 10, this.cursor.y);
             break;
         }
       }
