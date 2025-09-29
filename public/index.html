@@ -13,6 +13,9 @@
         if (msg.data === "reload") {
           location.reload();
         }
+        if (msg.data.endsWith(".glsl")) {
+          reloadShader(msg.data);
+        }
       };
     </script>
   </head>

@@ -28,6 +28,11 @@ window.addPlayer = () => {
   addPlayer(players.length);
 };
 
+window.reloadShader = (shader) => {
+  console.log(`Shader changed: ${shader}`);
+  players.filter((p) => p.file === shader).forEach((p) => p.load());
+};
+
 window.changeMode = (mode) => {
   eventBus.emit({ type: "changeMode", data: mode });
 };
