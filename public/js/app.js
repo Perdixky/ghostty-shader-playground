@@ -54,6 +54,14 @@ window.addEventListener("keydown", function (event) {
   }
 });
 
+let tickRateInput = document.getElementById("tickRate");
+tickRateInput.value = store.config.tickRate;
+tickRateInput.addEventListener("input", (event) => {
+  setTickRate(event.target.value);
+  store.config.tickRate = event.target.value ?? 50;
+  store.config.save();
+});
+
 let cursorColorInput = document.getElementById("cursorColor");
 cursorColorInput.value = store.config.cursorColor;
 cursorColorInput.addEventListener("input", (event) => {
