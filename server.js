@@ -89,6 +89,13 @@ function broadcastReload() {
     }
   });
 }
+function broadcastReloadShader(file) {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(file);
+    }
+  });
+}
 
 function watchForChanges() {
   const toWatch = [PUBLIC_DIR];
@@ -101,7 +108,11 @@ function watchForChanges() {
           fs.watch(p, { recursive: true }, (event, filename) => {
             if (!filename) return;
             console.log(`Changed: ${filename}`);
-            broadcastReload();
+            if (filename.endsWith(".glsl")) {
+              broadcastReloadShader(filename);
+            } else {
+              broadcastReload();
+            }
           });
         } catch (recursiveError) {
           watchDirectoryRecursively(p);
@@ -118,11 +129,34 @@ function watchForChanges() {
   }
 }
 
-function watchDirectoryRecursively(dirPath) {
+const pending = new Map();
+
+function scheduleReload(filename, isShader) {
+  clearTimeout(pending.get(filename));
+  const timeout = setTimeout(() => {
+    if (isShader) broadcastReloadShader(filename);
+    else broadcastReload();
+    pending.delete(filename);
+  }, 100); // debounce time
+  pending.set(filename, timeout);
+}
+let reloadTimer;
+
+function watchDirectoryRecursively(dirPath, depth = 0) {
   fs.watch(dirPath, (event, filename) => {
     if (!filename) return;
-    console.log(`Changed: ${filename}`);
-    broadcastReload();
+    // ignore changes from tmp files ?
+    if (!filename || filename.endsWith("~") || /^\d+$/.test(filename)) return;
+
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+      console.log(`${performance.now() / 1000}[${depth}] Changed: ${filename}`);
+      if (filename.endsWith(".glsl")) {
+        broadcastReloadShader(filename);
+      } else {
+        broadcastReload();
+      }
+    }, 10);
   });
 
   try {
@@ -130,7 +164,7 @@ function watchDirectoryRecursively(dirPath) {
     for (const entry of entries) {
       if (entry.isDirectory()) {
         const subDirPath = path.join(dirPath, entry.name);
-        watchDirectoryRecursively(subDirPath);
+        watchDirectoryRecursively(subDirPath, depth + 1);
       }
     }
   } catch (err) {

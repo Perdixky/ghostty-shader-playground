@@ -1,6 +1,6 @@
 {
   "name": "ghostty-shader-playground",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "A web-based playground for creating and testing cursor shaders for the Ghostty terminal",
   "main": "server.js",
   "scripts": {

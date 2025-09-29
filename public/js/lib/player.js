@@ -27,6 +27,7 @@ class ShaderPlayer {
   cursorColor = [0, 0, 1, 1];
   presetPosition = 0;
   index = -1;
+  file = "debug_cursor_static.glsl";
   tickFunction = () => {
     this.changePresetPosition(1);
   };
@@ -173,16 +174,20 @@ class ShaderPlayer {
     });
 
     selectMenu.addEventListener("change", (event) => {
-      const shaderName = event.target.value;
-      let wrapShader = (shader) => store.wrapper.replace("//$REPLACE$", shader);
-      getShader(shaderName).then((shaderCode) => {
-        store.config.canvas[this.index] = shaderName;
-        store.config.save();
-        var fragment = wrapShader(shaderCode);
-        this.play(fragment);
-      });
+      this.file = event.target.value;
+      this.load();
     });
     return selectMenu;
+  }
+
+  load() {
+    let wrapShader = (shader) => store.wrapper.replace("//$REPLACE$", shader);
+    getShader(this.file).then((shaderCode) => {
+      store.config.canvas[this.index] = this.file;
+      store.config.save();
+      var fragment = wrapShader(shaderCode);
+      this.play(fragment);
+    });
   }
 
   /**
