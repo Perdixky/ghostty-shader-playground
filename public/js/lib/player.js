@@ -21,6 +21,7 @@ class ShaderPlayer {
   renderer;
   wrapper;
   canvas;
+  canvas2;
   clickListener;
   bus;
   cursor = { x: 0, y: 0, w: 10, h: 20 };
@@ -60,12 +61,24 @@ class ShaderPlayer {
 
     this.cursorColor = hexToRgbNormalized(store.config.cursorColor);
     this.canvas = document.createElement("canvas");
-    this.canvas.width = this.wrapper.clientWidth;
-    this.canvas.height = this.wrapper.clientHeight;
-    this.canvas.style.background = store.config.backgroundColor;
+    this.canvas.style.background = "purple";
     this.wrapper.appendChild(this.canvas);
+
+    this.canvas2 = document.createElement("canvas");
+    this.canvas2.style.zIndex = "-1";
+    this.canvas2.style.background = "pink";
+    this.wrapper.appendChild(this.canvas2);
+
+    const resizeObserver = new ResizeObserver(() => {
+      this.canvas2.width = this.wrapper.clientWidth;
+      this.canvas2.height = this.wrapper.clientHeight;
+      this._drawBackround(store.config.backgroundColor);
+    });
+    resizeObserver.observe(this.wrapper);
+
     playground.appendChild(this.wrapper);
     this.renderer = new CanvasGLSL(this.canvas);
+
     this.bus = bus;
     this.clickListener = this.canvas.addEventListener("click", (event) => {
       const rect = this.canvas.getBoundingClientRect();
@@ -80,7 +93,7 @@ class ShaderPlayer {
         store.config.save();
       }
       if (event.type == "backgroundColor") {
-        this.canvas.style.background = event.data;
+        this._drawBackround(event.data);
         store.config.backgroundColor = event.data;
         store.config.save();
       }
@@ -128,6 +141,15 @@ class ShaderPlayer {
     });
   }
 
+  _drawBackround(color) {
+    const ctx = this.canvas2.getContext("2d");
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, this.canvas2.width, this.canvas2.height);
+    if (this.renderer) {
+      let texture = this.renderer.createTexture(this.canvas2);
+      this.renderer.setUniform("iChannel0", texture);
+    }
+  }
   _createButtonWrapper() {
     const div = document.createElement("div");
     div.classList.add("_toolbox");

@@ -14,6 +14,7 @@ uniform vec4 iPreviousCursor;
 uniform float iTimeCursorChange;
 uniform vec4 iCurrentCursorColor;
 uniform vec4 iPreviousCursorColor;
+uniform sampler2D iChannel0;
 
 out vec4 fragColor;
 

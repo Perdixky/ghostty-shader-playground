@@ -65,9 +65,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec3 base_color = iCurrentCursorColor.rgb;
     base_color = vec3(0.1, 0.5, 2.5);
     base_color = BLAZE_COLOR;
-    #if !defined(WEB)
     fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
-    #endif
 
     float elapsed = iTime - iTimeCursorChange;
 

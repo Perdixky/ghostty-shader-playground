@@ -1,7 +1,3 @@
-/**
- * CanvasGLSL - A vanilla JavaScript library for WebGL shader management
- * Provides a simple API similar to Shadertoy for canvas-based GLSL shaders
- */
 class CanvasGLSL {
   constructor(canvas, options = {}) {
     if (!canvas) {
@@ -129,7 +125,7 @@ class CanvasGLSL {
         return false;
       }
 
-      this.setupUniforms();
+      this.setUniform("iResolution", this.canvas.width, this.canvas.height);
       this.setupAttributes();
 
       this.handleSuccess("Shader loaded and compiled successfully");
@@ -205,18 +201,6 @@ class CanvasGLSL {
     }
   }
 
-  //NOTE: Posible removal
-  setupUniforms() {
-    // this.uniforms.iResolution = this.gl.getUniformLocation(
-    //   this.program,
-    //   "IResolution",
-    // );
-    // this.uniforms.iTime = this.gl.getUniformLocation(this.program, "iTime");
-
-    // Set initial resolution
-    this.setUniform("iResolution", this.canvas.width, this.canvas.height);
-  }
-
   setupAttributes() {
     this.attributes.position = this.gl.getAttribLocation(
       this.program,
@@ -230,6 +214,17 @@ class CanvasGLSL {
   //  * @param {*} value - Uniform value (array, number, or texture)
   //  */
   setUniform(name, ...value) {
+    if (value instanceof WebGLTexture) {
+      // handle texture uniforms
+      const textureunit = object
+        .keys(this.uniforms)
+        .filter((key) => this.uniforms[key] instanceof webgltexture).length;
+
+      this.gl.activetexture(this.gl.texture0 + textureunit);
+      this.gl.bindtexture(this.gl.texture_2d, value);
+      this.gl.uniform1i(location, textureunit);
+    }
+
     let u = {};
     u[name] = value;
     this.setUniforms(u);

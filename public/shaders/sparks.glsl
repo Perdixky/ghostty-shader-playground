@@ -59,9 +59,10 @@ vec2 norm(vec2 value, float isPosition) {
     return (value * 2.0 - (iResolution.xy * isPosition)) / iResolution.y;
 }
 
-vec3 saturate(vec3 color, float factor) {
-    float gray = dot(color, vec3(0.299, 0.587, 0.114)); // luminance
-    return mix(vec3(gray), color, factor);
+float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b)
+{
+    vec2 d = abs(p - xy) - b;
+    return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
@@ -69,9 +70,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     base_color = vec3(0.1, 0.5, 2.5);
     // base_color = vec3(0.5, 0.1, 2.5);
 
-    #if !defined(WEB)
     fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
-    #endif
 
     float elapsed = iTime - iTimeCursorChange;
 
@@ -86,17 +85,27 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 vu = norm(fragCoord, 1.);
     float c0 = 0., c1 = 0.;
 
-    for (float i = 0.; i < 50.; ++i) {
-        float t = 5. * iTime + hash11(i);
-        vec2 v = hash21(i + 50. * floor(t));
+    // === Configuration Constants ===
+    const float TOTAL_PARTICLES = 20.0; // default 50
+    const float PARTICLE_SEPARATION = 20.0; // default 20
+    const float RANDOM_SEED_OFFSET = 50.0; // default 50
+    const float TIME_MULTIPLIER = 5.0; // Default 5
+    const float TWO_PI = 6.283185; // 2 * PI
+    const float GAUSSIAN_SCALE = -2.0; // default -2.0
+    const float COLOR_INTENSITY = 4.0; // default 4.0
+    const float COLOR_FADE_FACTOR = 0.3; // default 0.3
+
+    for (float i = 0.; i < TOTAL_PARTICLES; ++i) {
+        float t = TIME_MULTIPLIER * iTime + hash11(i);
+        vec2 v = hash21(i + RANDOM_SEED_OFFSET * floor(t));
         t = fract(t);
-        v = vec2(sqrt(-2. * log(1. - v.x)), 6.283185 * v.y);
-        v = 20. * v.x * vec2(cos(v.y), sin(v.y));
+        v = vec2(sqrt(GAUSSIAN_SCALE * log(1. - v.x)), TWO_PI * v.y);
+        v = PARTICLE_SEPARATION * v.x * vec2(cos(v.y), sin(v.y));
 
         vec2 p = center + t * v - fragCoord;
         p.x = p.x + iCurrentCursor.x + iCurrentCursor.z * 0.5;
         p.y = p.y + iCurrentCursor.y - iCurrentCursor.w * 0.5;
-        c0 += 4. * (1. - t) / (1. + 0.3 * dot(p, p));
+        c0 += COLOR_INTENSITY * (1. - t) / (1. + COLOR_FADE_FACTOR * dot(p, p));
 
         p = p.yx;
         v = v.yx;
@@ -106,6 +115,14 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
             );
     }
 
+    vec2 offsetFactor = vec2(-.5, 0.5);
+
+    // Normalization for cursor position and size;
+    // cursor xy has the postion in a space of -1 to 1;
+    // zw has the width and height
+    vec4 currentCursor = vec4(norm(iCurrentCursor.xy, 1.), norm(iCurrentCursor.zw, 0.));
+    vec4 previousCursor = vec4(norm(iPreviousCursor.xy, 1.), norm(iPreviousCursor.zw, 0.));
+    float sdfCurrentCursor = getSdfRectangle(vu, currentCursor.xy - (currentCursor.zw * offsetFactor), currentCursor.zw * 0.5);
     // vec3 rgb = c0 * base_color + c1 * base_color * blue_shift;
     // rgb += hash33(vec3(fragCoord, iTime * 256.)) / 512.;
     // rgb = pow(rgb, vec3(0.4545));
@@ -121,6 +138,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     float mask = clamp(c0 * 0.2, 0.0, 1.0) * fade;
 
     // fragColor = mix(fragColor, vec4(rgb, 1.0), mask);
-    fragColor = fragColor + vec4(rgb * mask, 1.0); // additive
-    fragColor = min(fragColor, 1.0); // clamp
+    vec4 newColor = fragColor + vec4(rgb * mask, 1.0); // additive
+    // newColor = mix(newColor, fragColor, step(sdfCurrentCursor, 0.));
+    fragColor = min(newColor, 1.0); // clamp
 }
