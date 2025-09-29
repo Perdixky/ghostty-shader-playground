@@ -48,8 +48,10 @@ class ShaderPlayer {
     selectMenu.value = store.config.canvas[index] ?? "debug_cursor_static.glsl";
     selectMenu.dispatchEvent(new Event("change"));
     //PIP BUTTON
-    let pipButton = this._createPiPButton();
-    toolboxEl.appendChild(pipButton);
+    if (store.video.requestPictureInPicture) {
+      let pipButton = this._createPiPButton();
+      toolboxEl.appendChild(pipButton);
+    }
     //REMOVE BUTTON
     let removeButton = this._createRemoveButton();
     toolboxEl.appendChild(removeButton);
