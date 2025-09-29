@@ -1,4 +1,4 @@
-# Shader Playground
+# Ghostty Shader Playground
 
 A web-based playground for creating and testing shaders for the Ghostty terminal.
 
