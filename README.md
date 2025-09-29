@@ -1,6 +1,6 @@
 # Shader Playground
 
-A web-based playground for creating and testing cursor shaders for the Ghostty terminal.
+A web-based playground for creating and testing shaders for the Ghostty terminal.
 
 ## Getting Started
 
@@ -34,18 +34,31 @@ The server provides:
 
 ## Usage
 
+- Start the server and edit or create shaders inside the `public/shaders` directory with your favorite editor/IDE.  
+  Watch them refresh automatically in the browser for faster development.
 - Use the toolbar at the bottom to:
   - Change cursor type (block, vertical bar, horizontal bar)
   - Switch between AUTO, RND, and CLICK cursor movement modes
-  - Pick a cursor color (maped to uniform iCurrentCursorColor)
+  - Pick a cursor color (mapped to uniform iCurrentCursorColor)
 - Click on a canvas (in CLICK mode) to move the cursor.
 - Use the dropdown on each canvas to switch shaders.
-- Use keyboard arrows, Enter, and Backspace to move the cursor.
+- You can use the keyboard arrows, Enter, and Backspace to move the cursor as well.
+
+## Contributing Shaders
+
+Would you like your shader to be part of the playground collection?  
+Feel free to make a pull request to add your shader in the `shaders/` directory!  
+Community contributions are welcome and appreciated.
 
 ## Developing Shaders
 
-- Add your own shaders to the `shaders/` directory - they will automatically appear in the dropdown menus.
+- Add your own shaders to the `shaders/` directory; they will automatically appear in the dropdown menus.
 - The server automatically watches for file changes and reloads the page when you modify shaders or other files.
+
+## Acknowledgements
+
+Special thanks to [patriciogonzalezvivo](https://github.com/patriciogonzalezvivo) for his library [glslCanvas](https://github.com/patriciogonzalezvivo/glslCanvas).  
+Although this project now uses a rewritten implementation to support WebGL2 and different default uniforms, his work made it possible, and several functions are directly copied from his library.
 
 ## License
 
