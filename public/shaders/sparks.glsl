@@ -1,3 +1,6 @@
+// Original shader by yakovgal on Shadertoy:
+// https://www.shadertoy.com/user/yakovgal
+
 const vec3 blue_shift = vec3(1.0, 1.0, 1.0);
 
 uint pcg(uint v)
