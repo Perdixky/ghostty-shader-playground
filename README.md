@@ -2,6 +2,10 @@
 
 A web-based playground for creating and testing shaders for the Ghostty terminal.
 
+
+https://github.com/user-attachments/assets/32758e20-1056-42cd-b98b-abea48a776f1
+
+
 ## Getting Started
 
 ### Prerequisites
@@ -43,6 +47,15 @@ The server provides:
 - Click on a canvas (in CLICK mode) to move the cursor.
 - Use the dropdown on each canvas to switch shaders.
 - You can use the keyboard arrows, Enter, and Backspace to move the cursor as well.
+
+
+
+https://github.com/user-attachments/assets/7a9cc545-0708-4a42-81ee-d1a28e005f4f
+
+
+
+
+
 
 ## Contributing Shaders
 
