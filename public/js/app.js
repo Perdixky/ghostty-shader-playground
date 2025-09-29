@@ -80,7 +80,11 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
     store.wrapper = ghosttyWrapper;
     store.shaderList = list;
     store.config.canvas.forEach((shader, index) => {
-      var player = new ShaderPlayer(index, playground, eventBus);
+      var player = new ShaderPlayer(index, playground, eventBus, (player) => {
+        player.wrapper.remove();
+        players = players.filter((p) => p !== player);
+        setGrid();
+      });
       players.push(player);
     });
     setGrid();
