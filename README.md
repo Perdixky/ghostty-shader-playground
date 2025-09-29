@@ -46,7 +46,6 @@ The server provides:
 
 ## Contributing Shaders
 
-Would you like your shader to be part of the playground collection?  
 Feel free to make a pull request to add your shader in the `shaders/` directory!  
 Community contributions are welcome and appreciated.
 
