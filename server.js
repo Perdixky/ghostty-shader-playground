@@ -19,6 +19,7 @@ const MIME_TYPES = {
   ".css": "text/css",
   ".ico": "image/x-icon",
   ".png": "image/png",
+  ".svg": "image/svg+xml",
 };
 
 const server = http.createServer(handleRequest);
