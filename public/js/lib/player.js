@@ -52,7 +52,6 @@ class ShaderPlayer {
       this.onPip,
       this.onTexture,
     );
-    this.cursorColor = hexToRgbNormalized(global.config.cursorColor);
     this.canvas = $.createElement("canvas._shader");
     this.textureCanvas = $.createElement("canvas._texture");
     this.wrapper.append(this.canvas, this.textureCanvas, this.ui.element);
