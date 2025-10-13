@@ -14,6 +14,19 @@ function setTickRate(interval) {
   }, interval);
 }
 
+global.bus.subscribe((event) => {
+  switch (event.type) {
+    case "cursorColor":
+      global.config.cursorColor = event.data;
+      global.config.save();
+      break;
+    case "backgroundColor":
+      global.config.backgroundColor = event.data;
+      global.config.save();
+      break;
+  }
+});
+
 function tick() {
   players.forEach((p) => p.tick());
 }

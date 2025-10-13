@@ -81,13 +81,9 @@ class ShaderPlayer {
       switch (event.type) {
         case "cursorColor":
           this.onCursorColor(event.data);
-          global.config.cursorColor = event.data;
-          global.config.save();
           break;
         case "backgroundColor":
           this.onBackgrounColor(event.data);
-          global.config.backgroundColor = event.data;
-          global.config.save();
           break;
         case "keyboard":
           this.onKeyboard(event.data);
