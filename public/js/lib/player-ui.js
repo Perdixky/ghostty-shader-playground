@@ -12,13 +12,13 @@ class PlayerUI {
     this.onTexture = onTexture;
 
     this.element = this._createWrapperElement();
-    let cb = this._createShowBackgroundCheckbox();
+    const playerSettings = global.config.players.find((p) => p.id == playerID);
+    let cb = this._createShowBackgroundCheckbox(playerSettings?.showTexture);
     this.element.appendChild(cb);
+    cb.firstElementChild.dispatchEvent(new Event("change"));
 
     let selectMenu = this._createShaderListSelect();
-    selectMenu.value =
-      global.config.players.find((p) => p.id == playerID)?.shader ??
-      "debug_cursor_static.glsl";
+    selectMenu.value = playerSettings?.shader ?? "debug_cursor_static.glsl";
     this.element.appendChild(selectMenu);
     selectMenu.dispatchEvent(new Event("change"));
 
@@ -31,17 +31,21 @@ class PlayerUI {
     this.element.appendChild(removeButtonEl);
   }
 
-  _createShowBackgroundCheckbox() {
+  _createShowBackgroundCheckbox(state) {
     const label = document.createElement("label");
     label.classList.add("_checkbox-label");
     label.classList.add("noselect");
     label.innerText = "Load texture";
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    label.appendChild(cb);
+    cb.checked = state;
+
     cb.addEventListener("change", (event) => {
+      console.log("cb event", event.target.checked);
       this.onTexture(event.target.checked);
     });
+    label.appendChild(cb);
+
     return label;
   }
   _createWrapperElement() {

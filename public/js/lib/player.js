@@ -43,6 +43,9 @@ class ShaderPlayer {
     this.id = id;
     this.wrapper = $.createElement("div._canvas-wrapper");
 
+    this.canvas = $.createElement("canvas._shader");
+    this.textureCanvas = $.createElement("canvas._texture");
+
     this.ui = new PlayerUI(
       this.id,
       () => {
@@ -52,10 +55,7 @@ class ShaderPlayer {
       this.onPip,
       this.onTexture,
     );
-    this.canvas = $.createElement("canvas._shader");
-    this.textureCanvas = $.createElement("canvas._texture");
     this.wrapper.append(this.canvas, this.textureCanvas, this.ui.element);
-
     const resizeObserver = new ResizeObserver(() => {
       this.canvas.width = this.wrapper.clientWidth;
       this.canvas.height = this.wrapper.clientHeight;
@@ -161,6 +161,10 @@ class ShaderPlayer {
   }
 
   onTexture = (show) => {
+    const playerSettings = global.config.players.find((p) => p.id == this.id);
+    playerSettings.showTexture = show;
+    global.config.save();
+
     if (show) {
       this.img1 = new Image();
       this.img1.src = "/img/bg_code.svg";
