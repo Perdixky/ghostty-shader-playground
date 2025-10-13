@@ -73,7 +73,7 @@ class CanvasGLSL {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
     if (this.program) {
-      this.setUniform("iResolution", [this.canvas.width, this.canvas.height]);
+      this.setUniform("iResolution", this.canvas.width, this.canvas.height);
     }
   }
 
@@ -214,20 +214,33 @@ class CanvasGLSL {
   //  * @param {*} value - Uniform value (array, number, or texture)
   //  */
   setUniform(name, ...value) {
-    if (value instanceof WebGLTexture) {
-      // handle texture uniforms
-      const textureunit = object
-        .keys(this.uniforms)
-        .filter((key) => this.uniforms[key] instanceof webgltexture).length;
+    let texture = value[0];
+    if (texture instanceof WebGLTexture) {
+      const gl = this.gl;
+      // Count how many texture uniforms are already set
+      const textureUnit = Object.keys(this.uniforms).filter(
+        (key) => this.uniforms[key] instanceof WebGLTexture,
+      ).length;
 
-      this.gl.activetexture(this.gl.texture0 + textureunit);
-      this.gl.bindtexture(this.gl.texture_2d, value);
-      this.gl.uniform1i(location, textureunit);
+      if (this.program) {
+        const location = gl.getUniformLocation(this.program, name);
+        if (!location) {
+          console.warn(`Uniform location not found for ${name}`);
+          return;
+        }
+
+        gl.activeTexture(gl.TEXTURE0 + textureUnit);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.uniform1i(location, textureUnit);
+      }
+
+      this.uniforms[name] = texture;
+      return;
+    } else {
+      let u = {};
+      u[name] = value;
+      this.setUniforms(u);
     }
-
-    let u = {};
-    u[name] = value;
-    this.setUniforms(u);
   }
   // setUniform(name, value) {
   //   const location = this.gl.getUniformLocation(this.program, name);
