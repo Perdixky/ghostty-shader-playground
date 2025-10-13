@@ -41,7 +41,6 @@ class PlayerUI {
     cb.checked = state;
 
     cb.addEventListener("change", (event) => {
-      console.log("cb event", event.target.checked);
       this.onTexture(event.target.checked);
     });
     label.appendChild(cb);

@@ -24,7 +24,6 @@ export class Cursor {
   color = [0, 0, 1, 1];
 
   constructor() {
-    console.log(global.config.cursorColor);
     this.setColor(global.config.cursorColor);
   }
 

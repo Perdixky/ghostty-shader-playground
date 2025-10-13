@@ -39,7 +39,6 @@ class ShaderPlayer {
    */
   constructor(id, removeFn) {
     this.cursor = new Cursor();
-    console.log(id);
     this.id = id;
     this.wrapper = $.createElement("div._canvas-wrapper");
 
@@ -65,7 +64,6 @@ class ShaderPlayer {
     });
     resizeObserver.observe(this.wrapper);
 
-    // _.appendChild(this.wrapper);
     this.renderer = new CanvasGLSL(this.canvas);
 
     this.clickListener = this.canvas.addEventListener("click", (event) => {
@@ -106,7 +104,6 @@ class ShaderPlayer {
   };
 
   onBackgrounColor = (color) => {
-    console.log(color);
     this._drawBackround(color);
   };
 
