@@ -65,6 +65,8 @@ class ShaderPlayer {
     resizeObserver.observe(this.wrapper);
 
     this.renderer = new CanvasGLSL(this.canvas);
+    this.renderer.onError = this.ui.onError;
+    this.renderer.onSuccess = this.ui.onSuccess;
 
     this.clickListener = this.canvas.addEventListener("click", (event) => {
       const rect = this.canvas.getBoundingClientRect();
@@ -266,13 +268,18 @@ class ShaderPlayer {
    * @param {Cursor} cursor
    */
   updateCursorUniform(cursor) {
-    const prev = this.renderer.uniforms["iCurrentCursor"]?.value[0];
+    if (!this.renderer.isRendering) {
+      return;
+    }
+    const prev = this.renderer.uniforms["iCurrentCursor"]?.value
+      ? this.renderer.uniforms["iCurrentCursor"].value[0]
+      : cursor.getUniformData();
+
     const iTime = this.renderer.uniforms["iTime"];
     if (prev) {
       this.renderer.setUniform("iPreviousCursor", ...prev);
     }
     this.renderer.setUniform("iCurrentCursor", ...cursor.getUniformData());
-    // NOTE: i dont like this.
     if (iTime) {
       let now = iTime.value[0][0];
       this.renderer.setUniform("iTimeCursorChange", now);

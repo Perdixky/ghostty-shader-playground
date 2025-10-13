@@ -5,6 +5,7 @@
   gap: 5px;
   height: 100%;
   background: #212638;
+  border-radius: 4px;
 }
 ._canvas-wrapper {
   position: relative;
@@ -16,24 +17,22 @@ canvas {
   position: absolute;
 }
 canvas._shader {
-  background: purple;
+  background: #ff08dd;
 }
 canvas._texture {
   background: pink;
   display: none;
 }
-._toolbox {
+body > ._toolbox {
   margin: auto;
   width: fit-content;
   height: 45px;
   z-index: 9;
   border-radius: 4px;
-  display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
 }
-._button {
+._toolbox button {
   height: 34px;
   cursor: pointer;
   min-width: 34px;
@@ -44,14 +43,14 @@ canvas._texture {
   justify-content: center;
   align-items: center;
 }
-._button:hover {
+._toolbox button:hover {
   background: #7d86a3;
 }
-._checkbox-label {
+._toolbox label {
   color: #333333;
   font-weight: bold;
   font-size: 14px;
-  padding: 0 4px;
+  padding: 0 4px 0 7px;
   height: 34px;
   border-radius: 3px;
   background: #c0c6dc;
@@ -64,6 +63,77 @@ select {
   color: #f3f3f3;
   font-weight: bold;
   border-radius: 3px;
+}
+
+._ui-layer {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+._ui-layer ._toolbox {
+  display: flex;
+  justify-content: flex-end;
+  align-self: flex-end;
+  position: absolute;
+  bottom: 0;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+._messages-area {
+  height: 100%;
+  width: 100%;
+  /* margin: 4px 4px 42px 4px; */
+  border: 1px solid red;
+  background: red;
+}
+._error-popup {
+  position: absolute;
+  background: #ffc9c5;
+  border: 1px solid #f44336;
+  border-radius: 4px;
+  padding: 4px;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 4px 4px 42px 4px;
+  width: fit-content;
+  height: fit-content;
+  color: #c00d00;
+}
+._error-popup ._title {
+  font-weight: bold;
+}
+._error-popup ._codeBox {
+  display: flex;
+  flex-direction: column;
+}
+._error-popup pre {
+  margin: 0;
+  white-space: pre-wrap; /* Since CSS 2.1 */
+  white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+  white-space: -pre-wrap; /* Opera 4-6 */
+  white-space: -o-pre-wrap; /* Opera 7 */
+  word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+._error-popup ._codeBox ._line {
+  display: flex;
+  border-bottom: 1px solid #fca9a5;
+}
+._error-popup ._codeBox ._number {
+  width: 50px;
+  flex-shrink: 0;
+  border-right: 2px solid #fca9a5;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  padding: 0px 6px;
+  min-height: 20px;
+  margin-right: 6px;
+}
+._culprit {
+  font-weight: bold;
 }
 /* GENERAL */
 html,

@@ -131,13 +131,16 @@ class CanvasGLSL {
       this.handleSuccess("Shader loaded and compiled successfully");
       return true;
     } catch (error) {
-      this.handleError(error.message, error.type || "COMPILE_ERROR");
+      this.handleError(error.message, error.type || "COMPILE_ERROR", {
+        source: error.source,
+        context: error.context,
+      });
       return false;
     }
   }
 
   /**
-   * Compile shader source code
+   * Compile shader source codeu
    * @param {string} source - Shader source code
    * @param {number} type - Shader type (VERTEX_SHADER or FRAGMENT_SHADER)
    * @returns {WebGLShader} Compiled shader
@@ -155,10 +158,35 @@ class CanvasGLSL {
       errorObj.shaderType =
         type === this.gl.VERTEX_SHADER ? "vertex" : "fragment";
       errorObj.source = source;
+      errorObj.context = this.getShaderErrorContext(error, source);
       throw errorObj;
     }
 
     return shader;
+  }
+
+  /**
+   * Extracts shader error context
+   * @param {string} raw log
+   * @param {string} shaderSource - source code of the shader
+   * @param {number} [context=5] - number of lines before/after the error to include
+   * @returns {{ errorLine: number|null, lines: {lineNumber: number, code: string} }}
+   */
+  getShaderErrorContext(infoLog, shaderSource, context = 5) {
+    const match = infoLog.match(/ERROR:\s*\d+:(\d+):/);
+    if (!match) return { lineNumber: null, context: [] };
+
+    const errorLine = parseInt(match[1], 10);
+    const lines = shaderSource.split(/\r?\n/);
+    const start = Math.max(0, errorLine - 1 - context);
+    const end = Math.min(lines.length, errorLine + context);
+
+    let contextLines = [];
+    for (let i = start; i < end; i++) {
+      contextLines.push({ lineNumber: i + 1, code: lines[i] });
+    }
+
+    return { errorLine, lines: contextLines };
   }
 
   /**
@@ -313,6 +341,9 @@ class CanvasGLSL {
     let uniform = this.uniforms[name];
     let change = isDiff(uniform.value, value);
 
+    if (!this.program) {
+      return;
+    }
     // remember and keep track of uniforms location to save calls
     if (change || this.change || !uniform.location || !uniform.value) {
       uniform.name = name;
@@ -414,19 +445,20 @@ class CanvasGLSL {
       return;
     }
 
-    this.isRendering = true;
-    // this.startTime = null;
+    if (this.program) {
+      this.isRendering = true;
 
-    const animate = () => {
-      if (!this.isRendering) {
-        return;
-      }
+      const animate = () => {
+        if (!this.isRendering) {
+          return;
+        }
 
-      this.render();
-      this.animationId = requestAnimationFrame(animate);
-    };
+        this.render();
+        this.animationId = requestAnimationFrame(animate);
+      };
 
-    animate();
+      animate();
+    }
   }
 
   stop() {
