@@ -94,7 +94,8 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
 );
 
 function addPlayer(index) {
-  var player = new ShaderPlayer(index, playground, eventBus, removePlayer);
+  var player = new ShaderPlayer(index, eventBus, removePlayer);
+  playground.append(player.wrapper);
   players.push(player);
   setGrid();
 }

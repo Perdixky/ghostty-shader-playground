@@ -36,10 +36,10 @@ class ShaderPlayer {
   };
   img1 = undefined;
   /**
-   * @param {HTMLElement} playground
+   * @param {HTMLElement} _
    * @param {Bus} bus
    */
-  constructor(index, playground, bus, removeFn) {
+  constructor(index, bus, removeFn) {
     console.log(index);
     this.index = index;
     this.wrapper = $.createElement("div._canvas-wrapper");
@@ -67,7 +67,7 @@ class ShaderPlayer {
     });
     resizeObserver.observe(this.wrapper);
 
-    playground.appendChild(this.wrapper);
+    // _.appendChild(this.wrapper);
     this.renderer = new CanvasGLSL(this.canvas);
 
     this.bus = bus;
