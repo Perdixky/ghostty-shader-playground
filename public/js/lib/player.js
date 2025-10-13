@@ -4,6 +4,7 @@ import { store } from "./store.js";
 import { getShader } from "./service.js";
 import { hexToRgbNormalized, $ } from "./utils.js";
 import { PlayerUI } from "./player-ui.js";
+import { Cursor } from "./cursor.js";
 
 /**
  * @class ShaderPlayer
@@ -26,8 +27,6 @@ class ShaderPlayer {
   textureCanvas;
   clickListener;
   bus;
-  cursor = { x: 0, y: 0, w: 10, h: 20 };
-  cursorColor = [0, 0, 1, 1];
   presetPosition = 0;
   index = -1;
   file = "debug_cursor_static.glsl";
@@ -35,11 +34,13 @@ class ShaderPlayer {
     this.changePresetPosition(1);
   };
   img1 = undefined;
+  cursor;
   /**
    * @param {HTMLElement} _
    * @param {Bus} bus
    */
   constructor(index, bus, removeFn) {
+    this.cursor = new Cursor();
     console.log(index);
     this.index = index;
     this.wrapper = $.createElement("div._canvas-wrapper");
@@ -75,62 +76,81 @@ class ShaderPlayer {
       const rect = this.canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = this.canvas.height - (event.clientY - rect.top);
+      console.log(x, y);
+
       this.bus.emit({ type: "click", data: { x, y } });
     });
     var eventBus = this.bus.subscribe((event) => {
-      if (event.type == "cursorColor") {
-        this.updateCursorColor(hexToRgbNormalized(event.data));
-        store.config.cursorColor = event.data;
-        store.config.save();
-      }
-      if (event.type == "backgroundColor") {
-        this._drawBackround(event.data);
-        store.config.backgroundColor = event.data;
-        store.config.save();
-      }
-      if (event.type == "keyboard") {
-        switch (event.data) {
-          case "up":
-            this.updateCursor(this.cursor.x, this.cursor.y + 20);
-            break;
-          case "down":
-            this.updateCursor(this.cursor.x, this.cursor.y - 20);
-            break;
-          case "left":
-            this.updateCursor(this.cursor.x - 10, this.cursor.y);
-            break;
-          case "right":
-            this.updateCursor(this.cursor.x + 10, this.cursor.y);
-            break;
-        }
-      }
-      if (event.type == "changeCursor") {
-        this.updateCursor(null, null, event.data.width, event.data.height);
-      }
-      if (event.type == "click") {
-        if (this.tickFunction) {
-          this.tickFunction();
-        } else {
-          console.log(event.data.x, event.data.y);
-          this.updateCursor(event.data.x, event.data.y);
-        }
-      }
-      if (event.type == "changeMode") {
-        switch (event.data) {
-          case "auto":
-            this.tickFunction = () => {
-              this.changePresetPosition(1);
-            };
-            break;
-          case "click":
-            this.tickFunction = null;
-            break;
-          case "rnd":
-            this.tickFunction = this.randomCursor;
-        }
+      switch (event.type) {
+        case "cursorColor":
+          this.onCursorColor(event.data);
+          store.config.cursorColor = event.data;
+          store.config.save();
+          break;
+        case "backgroundColor":
+          this.onBackgrounColor(event.data);
+          store.config.backgroundColor = event.data;
+          store.config.save();
+          break;
+        case "keyboard":
+          this.onKeyboard(event.data);
+          break;
+        case "changeCursor":
+          this.onChangeCursor(event.data);
+          break;
+        case "click":
+          this.onClick(event.data);
+          break;
+        case "changeMode":
+          this.onChangeMode(event.data);
+          break;
       }
     });
   }
+
+  onCursorColor = (color) => {
+    this.cursor.setColor(color);
+    this.renderer.setUniform("iCurrentCursorColor", ...this.cursor.color);
+  };
+
+  onBackgrounColor = (color) => {
+    console.log(color);
+    this._drawBackround(color);
+  };
+
+  onKeyboard = (direction) => {
+    this.cursor.move(direction);
+    this.updateCursorUniform(this.cursor);
+  };
+
+  onChangeCursor = (size) => {
+    this.cursor.setSize(size.width, size.height);
+    this.updateCursorUniform(this.cursor);
+  };
+
+  onClick = (position) => {
+    if (this.tickFunction) {
+      this.tickFunction();
+    } else {
+      this.cursor.setPosition(position.x, position.y);
+      this.updateCursorUniform(this.cursor);
+    }
+  };
+
+  onChangeMode = (mode) => {
+    switch (mode) {
+      case "auto":
+        this.tickFunction = () => {
+          this.changePresetPosition(1);
+        };
+        break;
+      case "click":
+        this.tickFunction = null;
+        break;
+      case "rnd":
+        this.tickFunction = this.randomCursor;
+    }
+  };
 
   _drawBackround(color) {
     const ctx = this.textureCanvas.getContext("2d");
@@ -195,7 +215,7 @@ class ShaderPlayer {
     this.renderer.stop();
     this.renderer.loadShader(this.vertex, fragmentShadder);
     this.renderer.start();
-    this.updateCursorColor(this.cursorColor);
+    this.renderer.setUniform("iCurrentCursorColor", ...this.cursor.color);
   }
 
   tick() {
@@ -210,7 +230,8 @@ class ShaderPlayer {
     }
     const x = Math.random() * this.canvas.width;
     const y = Math.random() * this.canvas.height;
-    this.updateCursor(x, y);
+    this.cursor.setPosition(x, y);
+    this.updateCursorUniform(this.cursor);
   }
 
   changePresetPosition(increment) {
@@ -222,59 +243,46 @@ class ShaderPlayer {
     this.presetPosition = (this.presetPosition + increment) % 7;
     switch (this.presetPosition) {
       case 0:
-        this.updateCursor(left, top);
+        this.cursor.setPosition(left, top);
         break;
       case 1:
-        this.updateCursor(right, bottom);
+        this.cursor.setPosition(right, bottom);
         break;
       case 2:
-        this.updateCursor(right, top);
+        this.cursor.setPosition(right, top);
         break;
       case 3:
-        this.updateCursor(left, top);
+        this.cursor.setPosition(left, top);
         break;
       case 4:
-        this.updateCursor(left, bottom);
+        this.cursor.setPosition(left, bottom);
         break;
       case 5:
-        this.updateCursor(right, bottom);
+        this.cursor.setPosition(right, bottom);
         break;
       case 6:
-        this.updateCursor(right, top);
-        this.updateCursor(left, bottom);
+        this.cursor.setPosition(right, top);
+        this.cursor.setPosition(left, bottom);
         break;
     }
+    this.updateCursorUniform(this.cursor);
   }
 
-  updateCursor(x, y, w, h) {
-    this.renderer.setUniform(
-      "iPreviousCursor",
-      this.cursor.x,
-      this.cursor.y,
-      this.cursor.w,
-      this.cursor.h,
-    );
-    this.cursor.x = x !== undefined ? x : this.cursor.x;
-    this.cursor.y = y !== undefined ? y : this.cursor.y;
-    this.cursor.w = w !== undefined ? w : this.cursor.w;
-    this.cursor.h = h !== undefined ? h : this.cursor.h;
-    this.renderer.setUniform(
-      "iCurrentCursor",
-      this.cursor.x,
-      this.cursor.y,
-      this.cursor.w,
-      this.cursor.h,
-    );
-    //NOTE: i dont like this.
-    let iTime = this.renderer.uniforms["iTime"];
+  /**
+   * @param {Cursor} cursor
+   */
+  updateCursorUniform(cursor) {
+    const prev = this.renderer.uniforms["iCurrentCursor"]?.value[0];
+    const iTime = this.renderer.uniforms["iTime"];
+    if (prev) {
+      this.renderer.setUniform("iPreviousCursor", ...prev);
+    }
+    this.renderer.setUniform("iCurrentCursor", ...cursor.getUniformData());
+    // NOTE: i dont like this.
     if (iTime) {
       let now = iTime.value[0][0];
       this.renderer.setUniform("iTimeCursorChange", now);
     }
-  }
-
-  updateCursorColor(color) {
-    this.renderer.setUniform("iCurrentCursorColor", ...color);
   }
 }
 
