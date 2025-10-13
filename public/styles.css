@@ -28,10 +28,14 @@ body {
   right: 10px;
 }
 canvas {
-  height: 100%;
-  width: 100%;
   position: absolute;
-  display: block;
+}
+canvas._shader {
+  background: purple;
+}
+canvas._texture {
+  background: pink;
+  display: none;
 }
 ._toolbox {
   /* position: fixed; */
@@ -57,7 +61,17 @@ canvas {
   justify-content: center;
   align-items: center;
 }
-
+._checkbox-label {
+  color: #333333;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 0 4px;
+  height: 34px;
+  border-radius: 3px;
+  background: #c0c6dc;
+  display: flex;
+  align-items: center;
+}
 ._button:hover {
   background: #7d86a3;
 }
@@ -115,4 +129,13 @@ select {
 [data-tooltip]:hover:before {
   visibility: visible;
   opacity: 1;
+}
+
+.noselect {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }

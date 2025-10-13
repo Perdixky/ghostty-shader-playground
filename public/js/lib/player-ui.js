@@ -4,12 +4,16 @@ class PlayerUI {
   onRemove;
   onShaderChange;
   onPip;
-  constructor(index, onRemove, onShaderChange, onPip) {
+  onTexture;
+  constructor(index, onRemove, onShaderChange, onPip, onTexture) {
     this.onRemove = onRemove;
     this.onShaderChange = onShaderChange;
     this.onPip = onPip;
+    this.onTexture = onTexture;
 
     this.element = this._createWrapperElement();
+    let cb = this._createShowBackgroundCheckbox();
+    this.element.appendChild(cb);
 
     let selectMenu = this._createShaderListSelect();
     selectMenu.value = store.config.canvas[index] ?? "debug_cursor_static.glsl";
@@ -25,6 +29,19 @@ class PlayerUI {
     this.element.appendChild(removeButtonEl);
   }
 
+  _createShowBackgroundCheckbox() {
+    const label = document.createElement("label");
+    label.classList.add("_checkbox-label");
+    label.classList.add("noselect");
+    label.innerText = "Load texture";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    label.appendChild(cb);
+    cb.addEventListener("change", (event) => {
+      this.onTexture(event.target.checked);
+    });
+    return label;
+  }
   _createWrapperElement() {
     const div = document.createElement("div");
     div.classList.add("_toolbox");

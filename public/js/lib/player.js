@@ -2,7 +2,7 @@ import { CanvasGLSL } from "./canvas-glsl.js";
 import { Bus } from "./bus.js";
 import { store } from "./store.js";
 import { getShader } from "./service.js";
-import { hexToRgbNormalized } from "./utils.js";
+import { hexToRgbNormalized, $ } from "./utils.js";
 import { PlayerUI } from "./player-ui.js";
 
 /**
@@ -23,7 +23,7 @@ class ShaderPlayer {
   renderer;
   wrapper;
   canvas;
-  canvas2;
+  textureCanvas;
   clickListener;
   bus;
   cursor = { x: 0, y: 0, w: 10, h: 20 };
@@ -40,13 +40,9 @@ class ShaderPlayer {
    * @param {Bus} bus
    */
   constructor(index, playground, bus, removeFn) {
-    // this.img1 = new Image();
-    // this.img1.src = "/img/bg_code.svg";
-
     console.log(index);
     this.index = index;
-    this.wrapper = document.createElement("div");
-    this.wrapper.className = "_canvas-wrapper";
+    this.wrapper = $.createElement("div._canvas-wrapper");
 
     this.ui = new PlayerUI(
       index,
@@ -55,22 +51,18 @@ class ShaderPlayer {
       },
       this.onChangeShader,
       this.onPip,
+      this.onTexture,
     );
-    this.wrapper.appendChild(this.ui.element);
-
     this.cursorColor = hexToRgbNormalized(store.config.cursorColor);
-    this.canvas = document.createElement("canvas");
-    this.canvas.style.background = "purple";
-    this.wrapper.appendChild(this.canvas);
-
-    this.canvas2 = document.createElement("canvas");
-    this.canvas2.style.zIndex = "-1";
-    this.canvas2.style.background = "pink";
-    this.wrapper.appendChild(this.canvas2);
+    this.canvas = $.createElement("canvas._shader");
+    this.textureCanvas = $.createElement("canvas._texture");
+    this.wrapper.append(this.canvas, this.textureCanvas, this.ui.element);
 
     const resizeObserver = new ResizeObserver(() => {
-      this.canvas2.width = this.wrapper.clientWidth;
-      this.canvas2.height = this.wrapper.clientHeight;
+      this.canvas.width = this.wrapper.clientWidth;
+      this.canvas.height = this.wrapper.clientHeight;
+      this.textureCanvas.width = this.wrapper.clientWidth;
+      this.textureCanvas.height = this.wrapper.clientHeight;
       this._drawBackround(store.config.backgroundColor);
     });
     resizeObserver.observe(this.wrapper);
@@ -141,21 +133,33 @@ class ShaderPlayer {
   }
 
   _drawBackround(color) {
-    const ctx = this.canvas2.getContext("2d");
+    const ctx = this.textureCanvas.getContext("2d");
     ctx.fillStyle = color;
-    ctx.fillRect(0, 0, this.canvas2.width, this.canvas2.height);
-    // if (this.img1) {
-    //   ctx.save();
-    //   ctx.scale(1, -1);
-    //   ctx.drawImage(this.img1, 0, -this.canvas2.height);
-    //   ctx.restore();
-    // }
+    ctx.fillRect(0, 0, this.textureCanvas.width, this.textureCanvas.height);
+    if (this.img1) {
+      ctx.save();
+      ctx.scale(1, -1);
+      ctx.drawImage(this.img1, 0, -this.textureCanvas.height);
+      ctx.restore();
+    }
     if (this.renderer) {
-      let texture = this.renderer.createTexture(this.canvas2);
+      let texture = this.renderer.createTexture(this.textureCanvas);
       this.renderer.setUniform("iChannel0", texture);
     }
   }
 
+  onTexture = (show) => {
+    if (show) {
+      this.img1 = new Image();
+      this.img1.src = "/img/bg_code.svg";
+      this.img1.onload = () => {
+        this._drawBackround(store.config.backgroundColor);
+      };
+    } else {
+      this.img1 = undefined;
+      this._drawBackround(store.config.backgroundColor);
+    }
+  };
   onPip = async () => {
     try {
       const stream = this.canvas.captureStream(30); // 30 fps
