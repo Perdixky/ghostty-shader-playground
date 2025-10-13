@@ -155,11 +155,6 @@ class ShaderPlayer {
       this.renderer.setUniform("iChannel0", texture);
     }
   }
-  _createButtonWrapper() {
-    const div = document.createElement("div");
-    div.classList.add("_toolbox");
-    return div;
-  }
 
   onPip = async () => {
     try {
