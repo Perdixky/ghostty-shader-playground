@@ -3,6 +3,7 @@ import { Bus } from "./bus.js";
 import { store } from "./store.js";
 import { getShader } from "./service.js";
 import { hexToRgbNormalized } from "./utils.js";
+import { PlayerUI } from "./player-ui.js";
 
 /**
  * @class ShaderPlayer
@@ -13,6 +14,7 @@ import { hexToRgbNormalized } from "./utils.js";
  * @property {Bus} bus
  */
 class ShaderPlayer {
+  ui;
   vertex = `#version 300 es
     in vec2 position;
     void main() {
@@ -32,32 +34,29 @@ class ShaderPlayer {
   tickFunction = () => {
     this.changePresetPosition(1);
   };
+  img1 = undefined;
   /**
    * @param {HTMLElement} playground
    * @param {Bus} bus
    */
   constructor(index, playground, bus, removeFn) {
+    // this.img1 = new Image();
+    // this.img1.src = "/img/bg_code.svg";
+
     console.log(index);
     this.index = index;
     this.wrapper = document.createElement("div");
     this.wrapper.className = "_canvas-wrapper";
 
-    //CREATE TOOLBOX
-    let toolboxEl = this._createButtonWrapper();
-    this.wrapper.appendChild(toolboxEl);
-    //SELECT MENU
-    let selectMenu = this._createShaderListSelect();
-    toolboxEl.appendChild(selectMenu);
-    selectMenu.value = store.config.canvas[index] ?? "debug_cursor_static.glsl";
-    selectMenu.dispatchEvent(new Event("change"));
-    //PIP BUTTON
-    if (store.video.requestPictureInPicture) {
-      let pipButton = this._createPiPButton();
-      toolboxEl.appendChild(pipButton);
-    }
-    //REMOVE BUTTON
-    let removeButton = this._createRemoveButton(removeFn);
-    toolboxEl.appendChild(removeButton);
+    this.ui = new PlayerUI(
+      index,
+      () => {
+        removeFn(this);
+      },
+      this.onChangeShader,
+      this.onPip,
+    );
+    this.wrapper.prepend(this.ui.element);
 
     this.cursorColor = hexToRgbNormalized(store.config.cursorColor);
     this.canvas = document.createElement("canvas");
@@ -145,6 +144,12 @@ class ShaderPlayer {
     const ctx = this.canvas2.getContext("2d");
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, this.canvas2.width, this.canvas2.height);
+    // if (this.img1) {
+    //   ctx.save();
+    //   ctx.scale(1, -1);
+    //   ctx.drawImage(this.img1, 0, -this.canvas2.height);
+    //   ctx.restore();
+    // }
     if (this.renderer) {
       let texture = this.renderer.createTexture(this.canvas2);
       this.renderer.setUniform("iChannel0", texture);
@@ -155,52 +160,24 @@ class ShaderPlayer {
     div.classList.add("_toolbox");
     return div;
   }
-  _createPiPButton() {
-    const button = document.createElement("button");
-    button.classList.add("_button");
-    button.setAttribute("data-tooltip", "Picture in Picture");
-    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#333"><path d="M80-520v-80h144L52-772l56-56 172 172v-144h80v280H80Zm80 360q-33 0-56.5-23.5T80-240v-200h80v200h320v80H160Zm640-280v-280H440v-80h360q33 0 56.5 23.5T880-720v280h-80ZM560-160v-200h320v200H560Z"/></svg>`;
-    button.addEventListener("click", async () => {
-      try {
-        const stream = this.canvas.captureStream(30); // 30 fps
-        store.video.srcObject = stream;
-        // ensure video is playing before PiP
-        await store.video.play();
-        // enter picture-in-picture
-        await store.video.requestPictureInPicture();
-      } catch (err) {
-        console.error("Failed to enter PiP:", err);
-      }
-    });
 
-    return button;
-  }
-  _createRemoveButton(removeFn) {
-    const button = document.createElement("button");
-    button.classList.add("_button");
-    button.setAttribute("data-tooltip", "Remove player");
-    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ff0000"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`;
-    button.addEventListener("click", () => {
-      removeFn(this);
-    });
-    return button;
-  }
-  _createShaderListSelect() {
-    const selectMenu = document.createElement("select");
+  onPip = async () => {
+    try {
+      const stream = this.canvas.captureStream(30); // 30 fps
+      store.video.srcObject = stream;
+      // ensure video is playing before PiP
+      await store.video.play();
+      // enter picture-in-picture
+      await store.video.requestPictureInPicture();
+    } catch (err) {
+      console.error("Failed to enter PiP:", err);
+    }
+  };
 
-    store.shaderList.forEach((shader) => {
-      const option = document.createElement("option");
-      option.value = shader;
-      option.textContent = shader;
-      selectMenu.appendChild(option);
-    });
-
-    selectMenu.addEventListener("change", (event) => {
-      this.file = event.target.value;
-      this.load();
-    });
-    return selectMenu;
-  }
+  onChangeShader = (name) => {
+    this.file = name;
+    this.load();
+  };
 
   load() {
     let wrapShader = (shader) => store.wrapper.replace("//$REPLACE$", shader);
@@ -290,8 +267,11 @@ class ShaderPlayer {
       this.cursor.h,
     );
     //NOTE: i dont like this.
-    let now = this.renderer.uniforms["iTime"].value[0][0];
-    this.renderer.setUniform("iTimeCursorChange", now);
+    let iTime = this.renderer.uniforms["iTime"];
+    if (iTime) {
+      let now = iTime.value[0][0];
+      this.renderer.setUniform("iTimeCursorChange", now);
+    }
   }
 
   updateCursorColor(color) {
