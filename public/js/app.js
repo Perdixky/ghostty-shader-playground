@@ -30,7 +30,7 @@ global.bus.subscribe((event) => {
 function tick() {
   players.forEach((p) => p.tick());
 }
-setTickRate(500);
+setTickRate(global.config.tickRate);
 
 window.changeCursorType = (width, height) => {
   global.bus.emit({ type: "changeCursor", data: { width, height } });
