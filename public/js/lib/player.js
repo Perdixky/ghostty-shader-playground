@@ -26,7 +26,7 @@ class ShaderPlayer {
   textureCanvas;
   clickListener;
   presetPosition = 0;
-  index = -1;
+  id = -1;
   file = "debug_cursor_static.glsl";
   tickFunction = () => {
     this.changePresetPosition(1);
@@ -37,14 +37,14 @@ class ShaderPlayer {
    * @param {HTMLElement} _
    * @param {Bus} bus
    */
-  constructor(index, removeFn) {
+  constructor(id, removeFn) {
     this.cursor = new Cursor();
-    console.log(index);
-    this.index = index;
+    console.log(id);
+    this.id = id;
     this.wrapper = $.createElement("div._canvas-wrapper");
 
     this.ui = new PlayerUI(
-      index,
+      this.id,
       () => {
         removeFn(this);
       },
@@ -194,7 +194,8 @@ class ShaderPlayer {
   load() {
     let wrapShader = (shader) => global.wrapper.replace("//$REPLACE$", shader);
     getShader(this.file).then((shaderCode) => {
-      global.config.canvas[this.index] = this.file;
+      let playerSetting = global.config.players.find((p) => p.id == this.id);
+      playerSetting.shader = this.file;
       global.config.save();
       var fragment = wrapShader(shaderCode);
       this.play(fragment);

@@ -5,7 +5,7 @@ class PlayerUI {
   onShaderChange;
   onPip;
   onTexture;
-  constructor(index, onRemove, onShaderChange, onPip, onTexture) {
+  constructor(playerID, onRemove, onShaderChange, onPip, onTexture) {
     this.onRemove = onRemove;
     this.onShaderChange = onShaderChange;
     this.onPip = onPip;
@@ -17,7 +17,8 @@ class PlayerUI {
 
     let selectMenu = this._createShaderListSelect();
     selectMenu.value =
-      global.config.canvas[index] ?? "debug_cursor_static.glsl";
+      global.config.players.find((p) => p.id == playerID)?.shader ??
+      "debug_cursor_static.glsl";
     this.element.appendChild(selectMenu);
     selectMenu.dispatchEvent(new Event("change"));
 

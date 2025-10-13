@@ -1,6 +1,7 @@
 import { ShaderPlayer } from "./lib/player.js";
 import { global } from "./lib/global.js";
 import { getShaderList, getGhosttyWrapper } from "./lib/service.js";
+import { generateID } from "./lib/utils.js";
 
 let intervalId = undefined;
 let players = [];
@@ -36,7 +37,9 @@ window.changeCursorType = (width, height) => {
   global.bus.emit({ type: "changeCursor", data: { width, height } });
 };
 window.addPlayer = () => {
-  addPlayer(players.length);
+  let playerSettings = newPlayerSettings();
+  global.config.players.push(playerSettings);
+  addPlayer(playerSettings);
 };
 
 window.reloadShader = (shader) => {
@@ -98,23 +101,31 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
   ([ghosttyWrapper, list]) => {
     global.wrapper = ghosttyWrapper;
     global.shaderList = list;
-    global.config.canvas.forEach((shader, index) => {
-      addPlayer(index);
+    global.config.players.forEach((player) => {
+      addPlayer(player);
     });
   },
 );
 
-function addPlayer(index) {
-  var player = new ShaderPlayer(index, removePlayer);
+function addPlayer(playerConfig) {
+  var player = new ShaderPlayer(playerConfig.id, removePlayer);
   playground.append(player.wrapper);
   players.push(player);
   setGrid();
 }
 
+function newPlayerSettings() {
+  return {
+    id: generateID,
+    shader: "debug_cursor_static.glsl",
+    showTexture: false,
+  };
+}
+
 function removePlayer(player) {
   player.wrapper.remove();
-  let index = players.findIndex((p) => p === player);
-  global.config.canvas.splice(index, 1);
+  let index = players.findIndex((p) => p.id === player.id);
+  global.config.players.splice(index, 1);
   global.config.save();
   players = players.filter((p) => p !== player);
   setGrid();
