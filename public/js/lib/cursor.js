@@ -1,5 +1,5 @@
 import { hexToRgbNormalized } from "./utils.js";
-import { store } from "./store.js";
+import { global } from "./global.js";
 
 /**
  * @class Cursor
@@ -24,8 +24,8 @@ export class Cursor {
   color = [0, 0, 1, 1];
 
   constructor() {
-    console.log(store.config.cursorColor);
-    this.setColor(store.config.cursorColor);
+    console.log(global.config.cursorColor);
+    this.setColor(global.config.cursorColor);
   }
 
   /**

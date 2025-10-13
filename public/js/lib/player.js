@@ -1,6 +1,6 @@
 import { CanvasGLSL } from "./canvas-glsl.js";
 import { Bus } from "./bus.js";
-import { store } from "./store.js";
+import { global } from "./global.js";
 import { getShader } from "./service.js";
 import { hexToRgbNormalized, $ } from "./utils.js";
 import { PlayerUI } from "./player-ui.js";
@@ -54,7 +54,7 @@ class ShaderPlayer {
       this.onPip,
       this.onTexture,
     );
-    this.cursorColor = hexToRgbNormalized(store.config.cursorColor);
+    this.cursorColor = hexToRgbNormalized(global.config.cursorColor);
     this.canvas = $.createElement("canvas._shader");
     this.textureCanvas = $.createElement("canvas._texture");
     this.wrapper.append(this.canvas, this.textureCanvas, this.ui.element);
@@ -64,7 +64,7 @@ class ShaderPlayer {
       this.canvas.height = this.wrapper.clientHeight;
       this.textureCanvas.width = this.wrapper.clientWidth;
       this.textureCanvas.height = this.wrapper.clientHeight;
-      this._drawBackround(store.config.backgroundColor);
+      this._drawBackround(global.config.backgroundColor);
     });
     resizeObserver.observe(this.wrapper);
 
@@ -84,13 +84,13 @@ class ShaderPlayer {
       switch (event.type) {
         case "cursorColor":
           this.onCursorColor(event.data);
-          store.config.cursorColor = event.data;
-          store.config.save();
+          global.config.cursorColor = event.data;
+          global.config.save();
           break;
         case "backgroundColor":
           this.onBackgrounColor(event.data);
-          store.config.backgroundColor = event.data;
-          store.config.save();
+          global.config.backgroundColor = event.data;
+          global.config.save();
           break;
         case "keyboard":
           this.onKeyboard(event.data);
@@ -173,21 +173,21 @@ class ShaderPlayer {
       this.img1 = new Image();
       this.img1.src = "/img/bg_code.svg";
       this.img1.onload = () => {
-        this._drawBackround(store.config.backgroundColor);
+        this._drawBackround(global.config.backgroundColor);
       };
     } else {
       this.img1 = undefined;
-      this._drawBackround(store.config.backgroundColor);
+      this._drawBackround(global.config.backgroundColor);
     }
   };
   onPip = async () => {
     try {
       const stream = this.canvas.captureStream(30); // 30 fps
-      store.video.srcObject = stream;
+      global.video.srcObject = stream;
       // ensure video is playing before PiP
-      await store.video.play();
+      await global.video.play();
       // enter picture-in-picture
-      await store.video.requestPictureInPicture();
+      await global.video.requestPictureInPicture();
     } catch (err) {
       console.error("Failed to enter PiP:", err);
     }
@@ -199,10 +199,10 @@ class ShaderPlayer {
   };
 
   load() {
-    let wrapShader = (shader) => store.wrapper.replace("//$REPLACE$", shader);
+    let wrapShader = (shader) => global.wrapper.replace("//$REPLACE$", shader);
     getShader(this.file).then((shaderCode) => {
-      store.config.canvas[this.index] = this.file;
-      store.config.save();
+      global.config.canvas[this.index] = this.file;
+      global.config.save();
       var fragment = wrapShader(shaderCode);
       this.play(fragment);
     });

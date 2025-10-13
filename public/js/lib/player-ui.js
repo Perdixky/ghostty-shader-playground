@@ -1,4 +1,4 @@
-import { store } from "./store.js";
+import { global } from "./global.js";
 class PlayerUI {
   element;
   onRemove;
@@ -16,11 +16,12 @@ class PlayerUI {
     this.element.appendChild(cb);
 
     let selectMenu = this._createShaderListSelect();
-    selectMenu.value = store.config.canvas[index] ?? "debug_cursor_static.glsl";
+    selectMenu.value =
+      global.config.canvas[index] ?? "debug_cursor_static.glsl";
     this.element.appendChild(selectMenu);
     selectMenu.dispatchEvent(new Event("change"));
 
-    if (store.video.requestPictureInPicture) {
+    if (global.video.requestPictureInPicture) {
       let pipButtonEl = this._createPiPButton();
       this.element.appendChild(pipButtonEl);
     }
@@ -50,7 +51,7 @@ class PlayerUI {
 
   _createShaderListSelect() {
     const selectMenu = document.createElement("select");
-    store.shaderList.forEach((shader) => {
+    global.shaderList.forEach((shader) => {
       const option = document.createElement("option");
       option.value = shader;
       option.textContent = shader;

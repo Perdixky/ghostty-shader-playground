@@ -1,6 +1,6 @@
 import { ShaderPlayer } from "./lib/player.js";
 import { Bus } from "./lib/bus.js";
-import { store } from "./lib/store.js";
+import { global } from "./lib/global.js";
 import { getShaderList, getGhosttyWrapper } from "./lib/service.js";
 
 let intervalId = undefined;
@@ -63,21 +63,21 @@ window.addEventListener("keydown", function (event) {
 });
 
 let tickRateInput = document.getElementById("tickRate");
-tickRateInput.value = store.config.tickRate;
+tickRateInput.value = global.config.tickRate;
 tickRateInput.addEventListener("input", (event) => {
   setTickRate(event.target.value);
-  store.config.tickRate = event.target.value ?? 50;
-  store.config.save();
+  global.config.tickRate = event.target.value ?? 50;
+  global.config.save();
 });
 
 let cursorColorInput = document.getElementById("cursorColor");
-cursorColorInput.value = store.config.cursorColor;
+cursorColorInput.value = global.config.cursorColor;
 cursorColorInput.addEventListener("input", (event) => {
   eventBus.emit({ type: "cursorColor", data: event.target.value });
 });
 
 let backgroundColorInput = document.getElementById("backgroundColor");
-backgroundColorInput.value = store.config.backgroundColor;
+backgroundColorInput.value = global.config.backgroundColor;
 backgroundColorInput.addEventListener("input", (event) => {
   eventBus.emit({ type: "backgroundColor", data: event.target.value });
 });
@@ -85,9 +85,9 @@ backgroundColorInput.addEventListener("input", (event) => {
 const playground = document.getElementById("playground");
 Promise.all([getGhosttyWrapper(), getShaderList()]).then(
   ([ghosttyWrapper, list]) => {
-    store.wrapper = ghosttyWrapper;
-    store.shaderList = list;
-    store.config.canvas.forEach((shader, index) => {
+    global.wrapper = ghosttyWrapper;
+    global.shaderList = list;
+    global.config.canvas.forEach((shader, index) => {
       addPlayer(index);
     });
   },
@@ -103,8 +103,8 @@ function addPlayer(index) {
 function removePlayer(player) {
   player.wrapper.remove();
   let index = players.findIndex((p) => p === player);
-  store.config.canvas.splice(index, 1);
-  store.config.save();
+  global.config.canvas.splice(index, 1);
+  global.config.save();
   players = players.filter((p) => p !== player);
   setGrid();
 }
