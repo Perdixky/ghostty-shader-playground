@@ -1,5 +1,4 @@
 import { CanvasGLSL } from "./canvas-glsl.js";
-import { Bus } from "./bus.js";
 import { global } from "./global.js";
 import { getShader } from "./service.js";
 import { hexToRgbNormalized, $ } from "./utils.js";
@@ -26,7 +25,6 @@ class ShaderPlayer {
   canvas;
   textureCanvas;
   clickListener;
-  bus;
   presetPosition = 0;
   index = -1;
   file = "debug_cursor_static.glsl";
@@ -39,7 +37,7 @@ class ShaderPlayer {
    * @param {HTMLElement} _
    * @param {Bus} bus
    */
-  constructor(index, bus, removeFn) {
+  constructor(index, removeFn) {
     this.cursor = new Cursor();
     console.log(index);
     this.index = index;
@@ -71,16 +69,15 @@ class ShaderPlayer {
     // _.appendChild(this.wrapper);
     this.renderer = new CanvasGLSL(this.canvas);
 
-    this.bus = bus;
     this.clickListener = this.canvas.addEventListener("click", (event) => {
       const rect = this.canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = this.canvas.height - (event.clientY - rect.top);
       console.log(x, y);
 
-      this.bus.emit({ type: "click", data: { x, y } });
+      global.bus.emit({ type: "click", data: { x, y } });
     });
-    var eventBus = this.bus.subscribe((event) => {
+    var subscription = global.bus.subscribe((event) => {
       switch (event.type) {
         case "cursorColor":
           this.onCursorColor(event.data);

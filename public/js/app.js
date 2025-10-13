@@ -1,5 +1,4 @@
 import { ShaderPlayer } from "./lib/player.js";
-import { Bus } from "./lib/bus.js";
 import { global } from "./lib/global.js";
 import { getShaderList, getGhosttyWrapper } from "./lib/service.js";
 
@@ -19,10 +18,9 @@ function tick() {
   players.forEach((p) => p.tick());
 }
 setTickRate(500);
-const eventBus = new Bus();
 
 window.changeCursorType = (width, height) => {
-  eventBus.emit({ type: "changeCursor", data: { width, height } });
+  global.bus.emit({ type: "changeCursor", data: { width, height } });
 };
 window.addPlayer = () => {
   addPlayer(players.length);
@@ -34,7 +32,7 @@ window.reloadShader = (shader) => {
 };
 
 window.changeMode = (mode) => {
-  eventBus.emit({ type: "changeMode", data: mode });
+  global.bus.emit({ type: "changeMode", data: mode });
 };
 window.addEventListener("resize", function () {
   setGrid();
@@ -58,7 +56,7 @@ window.addEventListener("keydown", function (event) {
         move = "right";
         break;
     }
-    eventBus.emit({ type: "keyboard", data: move });
+    global.bus.emit({ type: "keyboard", data: move });
   }
 });
 
@@ -73,13 +71,13 @@ tickRateInput.addEventListener("input", (event) => {
 let cursorColorInput = document.getElementById("cursorColor");
 cursorColorInput.value = global.config.cursorColor;
 cursorColorInput.addEventListener("input", (event) => {
-  eventBus.emit({ type: "cursorColor", data: event.target.value });
+  global.bus.emit({ type: "cursorColor", data: event.target.value });
 });
 
 let backgroundColorInput = document.getElementById("backgroundColor");
 backgroundColorInput.value = global.config.backgroundColor;
 backgroundColorInput.addEventListener("input", (event) => {
-  eventBus.emit({ type: "backgroundColor", data: event.target.value });
+  global.bus.emit({ type: "backgroundColor", data: event.target.value });
 });
 
 const playground = document.getElementById("playground");
@@ -94,7 +92,7 @@ Promise.all([getGhosttyWrapper(), getShaderList()]).then(
 );
 
 function addPlayer(index) {
-  var player = new ShaderPlayer(index, eventBus, removePlayer);
+  var player = new ShaderPlayer(index, removePlayer);
   playground.append(player.wrapper);
   players.push(player);
   setGrid();
