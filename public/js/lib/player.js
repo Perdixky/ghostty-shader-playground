@@ -56,7 +56,7 @@ class ShaderPlayer {
       this.onChangeShader,
       this.onPip,
     );
-    this.wrapper.prepend(this.ui.element);
+    this.wrapper.appendChild(this.ui.element);
 
     this.cursorColor = hexToRgbNormalized(store.config.cursorColor);
     this.canvas = document.createElement("canvas");
