@@ -116,7 +116,7 @@ function addPlayer(playerConfig) {
 
 function newPlayerSettings() {
   return {
-    id: generateID,
+    id: generateID(),
     shader: "debug_cursor_static.glsl",
     showTexture: false,
   };
