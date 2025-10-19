@@ -1,27 +1,19 @@
 // Cursor trail shader that creates a hexagonal trailing effect with fade
-// Based on Inigo Quilez's 2D distance functions: https://iquilezles.org/articles/distfunctions2d/
 
 // Process each edge: compute distance and determine if point is inside
-#define PROCESS_EDGE(a, b) \
-    { \
-        vec2 edge = b - a; \
-        vec2 pa = p - a; \
-        float lenSq = dot(edge, edge); \
-        float validEdge = step(1e-8, lenSq); \
-        float invLenSq = validEdge / max(lenSq, 1e-8); \
-        /* Project point onto edge, clamped to [0,1] to stay within segment */ \
-        float t = clamp(dot(pa, edge) * invLenSq, 0.0, 1.0); \
-        vec2 diff = pa - edge * t; \
-        float dEdge = dot(diff, diff); \
-        float dPoint = dot(pa, pa); \
-        /* Track minimum distance to any edge */ \
-        minDist = min(minDist, mix(dPoint, dEdge, validEdge)); \
-        /* Cross product determines which side of edge the point is on */ \
-        float cross = edge.x * pa.y - edge.y * pa.x; \
-        float insideEdge = step(0.0, cross); \
-        /* Point must be inside all edges to be inside polygon */ \
-        inside = min(inside, mix(1.0, insideEdge, validEdge)); \
-    }
+void processEdge(vec2 p, vec2 a, vec2 b, inout float minDist, inout float inside) {
+    vec2 edge = b - a;
+    vec2 pa = p - a;
+    float lenSq = dot(edge, edge);
+    float invLenSq = 1.0 / lenSq;
+
+    float t = clamp(dot(pa, edge) * invLenSq, 0.0, 1.0);
+    vec2 diff = pa - edge * t;
+    minDist = min(minDist, dot(diff, diff));
+
+    float cross = edge.x * pa.y - edge.y * pa.x;
+    inside = min(inside, step(0.0, cross));
+}
 
 // Signed distance field for hexagon (negative inside, positive outside)
 // Vertices must be in counter-clockwise order
@@ -29,33 +21,21 @@ float sdHexagon(in vec2 p, in vec2 v0, in vec2 v1, in vec2 v2, in vec2 v3, in ve
     float minDist = 1e20;
     float inside = 1.0;
 
-    PROCESS_EDGE(v0, v1)
-    PROCESS_EDGE(v1, v2)
-    PROCESS_EDGE(v2, v3)
-    PROCESS_EDGE(v3, v4)
-    PROCESS_EDGE(v4, v5)
-    PROCESS_EDGE(v5, v0)
+    processEdge(p, v0, v1, minDist, inside);
+    processEdge(p, v1, v2, minDist, inside);
+    processEdge(p, v2, v3, minDist, inside);
+    processEdge(p, v3, v4, minDist, inside);
+    processEdge(p, v4, v5, minDist, inside);
+    processEdge(p, v5, v0, minDist, inside);
 
     float dist = sqrt(max(minDist, 0.0));
     return mix(dist, -dist, inside);
 }
 
-#undef PROCESS_EDGE
-
 // Signed distance field for rectangle (negative inside, positive outside)
 float sdRectangle(in vec2 p, in vec2 center, in vec2 halfSize) {
     vec2 d = abs(p - center) - halfSize;
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
-}
-
-// Convert screen coordinates to normalized coordinates [-1, 1]
-vec2 normPosition(vec2 pos, float invResY) {
-    return (pos * 2.0 - iResolution.xy) * invResY;
-}
-
-// Convert pixel size to normalized size
-vec2 normSize(vec2 size, float invResY) {
-    return size * 2.0 * invResY;
 }
 
 // Represents cursor as a quad with four corners
@@ -76,10 +56,10 @@ Quad getQuad(vec2 pos, vec2 size) {
     return q;
 }
 
-// Select 4 corners from quad based on movement direction
+// Select 3 corners from quad based on movement direction
 // sel.x: 0=left, 1=right | sel.y: 0=top, 1=bottom
 // Returns corners in counter-clockwise order for hexagon construction
-void selectCorners(Quad q, vec2 sel, out vec2 p1, out vec2 p2, out vec2 p3, out vec2 p4) {
+void selectTrailCorners(Quad q, vec2 sel, out vec2 p1, out vec2 p2, out vec2 p3) {
     p1 = mix(mix(q.topRight, q.topLeft, sel.x),
              mix(q.bottomRight, q.bottomLeft, sel.x),
              sel.y);
@@ -91,15 +71,22 @@ void selectCorners(Quad q, vec2 sel, out vec2 p1, out vec2 p2, out vec2 p3, out 
              mix(q.bottomLeft, q.topLeft, sel.x),
              sel.y);
 
+}
+
+// Select 4 corners from quad based on movement direction
+// sel.x: 0=left, 1=right | sel.y: 0=top, 1=bottom
+// Returns corners in counter-clockwise order for hexagon construction
+void selectCorners(Quad q, vec2 sel, out vec2 p1, out vec2 p2, out vec2 p3, out vec2 p4) {
+    selectTrailCorners(q, sel, p1, p2, p3);
+
     p4 = mix(mix(q.bottomLeft, q.bottomRight, sel.x),
              mix(q.topLeft, q.topRight, sel.x),
              sel.y);
 }
 
-// Cubic ease-out function for smooth animation
-float ease(float x) {
-    float clamped = clamp(x, 0.0, 1.0);
-    float t = 1.0 - clamped;
+// Cubic ease-out function for smooth animation (expects clamped input)
+float easeClamped(float x) {
+    float t = 1.0 - x;
     return 1.0 - t * t * t;
 }
 
@@ -107,26 +94,31 @@ float ease(float x) {
 const float DURATION = 0.5;
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    // Start with background texture
-    fragColor = texture(iChannel0, fragCoord / iResolution.xy);
-
     // Calculate animation progress with easing
     float baseProgress = clamp((iTime - iTimeCursorChange) / DURATION, 0.0, 1.0);
 
-    // Skip rendering when animation is complete
+    vec2 uv = fragCoord / iResolution.xy;
+    vec4 background = texture(iChannel0, uv);
+
+    // Skip further work when animation is complete
     if (baseProgress >= 1.0) {
+        fragColor = background;
         return;
     }
 
+    fragColor = background;
+
     // Precompute reused values
     float invResY = 1.0 / iResolution.y;
-    float aaWidth = 2.0 * invResY;
+    float scale = 2.0 * invResY;
+    float aaWidth = scale;
+    vec2 normOffset = iResolution.xy * invResY;
 
     // Normalize cursor positions and sizes to screen-independent coordinates
-    vec2 currentPos = normPosition(iCurrentCursor.xy, invResY);
-    vec2 previousPos = normPosition(iPreviousCursor.xy, invResY);
-    vec2 currentSize = normSize(iCurrentCursor.zw, invResY);
-    vec2 previousSize = normSize(iPreviousCursor.zw, invResY);
+    vec2 currentPos = iCurrentCursor.xy * scale - normOffset;
+    vec2 previousPos = iPreviousCursor.xy * scale - normOffset;
+    vec2 currentSize = iCurrentCursor.zw * scale;
+    vec2 previousSize = iPreviousCursor.zw * scale;
 
     // Determine movement direction and construct cursor quads
     vec2 deltaPos = currentPos - previousPos;
@@ -136,12 +128,13 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // Select corners based on movement direction
     vec2 currP1, currP2, currP3, currP4;
-    vec2 prevP1, prevP2, prevP3, prevUnused;
+    vec2 prevP1, prevP2, prevP3;
     selectCorners(currentCursor, selector, currP1, currP2, currP3, currP4);
-    selectCorners(previousCursor, selector, prevP1, prevP2, prevP3, prevUnused);
+    selectTrailCorners(previousCursor, selector, prevP1, prevP2, prevP3);
 
-    float easedProgress = ease(baseProgress);
-    float easedProgressDouble = ease(min(baseProgress * 2.0, 1.0));
+    float easedProgress = easeClamped(baseProgress);
+    float stretchedProgress = min(baseProgress * 2.0, 1.0);
+    float easedProgressDouble = easeClamped(stretchedProgress);
 
     // Create trailing effect by moving diagonal point slower
     vec2 trailP1 = mix(prevP1, currP1, easedProgress);
@@ -149,7 +142,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 trailP3 = mix(prevP3, currP3, easedProgressDouble);
 
     // Compute hexagon SDF and convert to alpha with antialiasing
-    vec2 normCoord = normPosition(fragCoord, invResY);
+    vec2 normCoord = fragCoord * scale - normOffset;
     float sdfHex = sdHexagon(normCoord, trailP1, trailP2, currP2, currP4, currP3, trailP3);
     float alpha = 1.0 - smoothstep(-aaWidth, aaWidth, sdfHex);
 
